@@ -5,15 +5,13 @@ This project uses:
 - Qt SQL for runtime database access
 - SQLite for the local database file
 - Flyway for schema migrations
-- SchemaSpy for ERD generation
 
 ## Structure
 
 - `flyway_runtime/`: Flyway project created from Flyway Desktop
 - `flyway_runtime/migrations/`: versioned Flyway SQL migrations
 - `flyway_runtime/schema-model/`: Flyway schema model files
-- `docs/`: generated database documentation output
-- `scripts/`: local helper scripts for migration commands
+- `docs/`: database documentation
 
 ## Rules
 
@@ -24,8 +22,7 @@ This project uses:
 
 ## Naming
 
-- Initial schema: `V1__init_schema.sql`
-- Later changes: `V2__description.sql`, `V3__description.sql`
+- use the Flyway Desktop generated versioned migration naming
 
 ## Local database
 

@@ -27,10 +27,10 @@ In development, `migrate` means:
 If you use the Flyway CLI directly, run it against the Flyway project folder:
 
 ```powershell
-.\database\tools\flyway\flyway.cmd info
-.\database\tools\flyway\flyway.cmd migrate
-.\database\tools\flyway\flyway.cmd validate
-.\database\tools\flyway\flyway.cmd repair
+.\database\tools\flyway\flyway.cmd -environment=development info
+.\database\tools\flyway\flyway.cmd -environment=development migrate
+.\database\tools\flyway\flyway.cmd -environment=development validate
+.\database\tools\flyway\flyway.cmd -environment=development repair
 ```
 
 Run those commands from:
@@ -52,7 +52,7 @@ In production, the expected approach is:
 
 - keep using versioned SQL migrations from `database/flyway_runtime/migrations`
 - bundle the Flyway CLI with the application or updater
-- run `flyway migrate` automatically against the installed user database
+- run `flyway -environment=production migrate` automatically against the installed user database
 - use a production-specific Flyway config if the DB path differs from local development
 - trigger migration before the app starts using repositories and services
 
@@ -64,5 +64,4 @@ Simple rule:
 ## Notes
 
 - Flyway Desktop generated the project folders automatically
-- SchemaSpy setup will be added after the first migration exists
 - setup details live in [setupdb.md](/C:/Users/arief/OneDrive/Desktop/travis-v2/travis/database/docs/setupdb.md)

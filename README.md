@@ -7,7 +7,6 @@ Database work is staged first as part of the Electron-to-Qt migration.
 - Runtime access: Qt SQL
 - Database engine: SQLite
 - Migrations: Flyway
-- Visualization: SchemaSpy
 
 Current database workspace:
 

@@ -5,7 +5,6 @@
 This document covers how to set up the database tooling for this project:
 
 - Flyway for schema migration
-- SchemaSpy for ERD generation
 
 ## Flyway local development setup
 
@@ -31,6 +30,14 @@ Result:
 - Flyway generates `database/flyway_runtime/flyway.toml`
 - Flyway generates `database/flyway_runtime/migrations/`
 - Flyway generates `database/flyway_runtime/schema-model/`
+- local machine connection values should go in `database/flyway_runtime/flyway.user.toml`
+
+Add the local development SQLite target:
+
+```toml
+[environments.development]
+url = "jdbc:sqlite:C:/Users/arief/OneDrive/Desktop/travis-v2/travis/database/travis.db"
+```
 
 If you also want the Flyway CLI bundled in the repo:
 
@@ -52,9 +59,11 @@ database/tools/flyway/flyway.cmd
 
 ```powershell
 cd .\database\flyway_runtime
-..\tools\flyway\flyway.cmd info
-..\tools\flyway\flyway.cmd migrate
+..\tools\flyway\flyway.cmd -environment=development info
+..\tools\flyway\flyway.cmd -environment=development migrate
 ```
+
+If `flyway -environment=development migrate` says the database connection is not configured, check `flyway.user.toml` first.
 
 Official references:
 
@@ -82,14 +91,5 @@ Recommended approach:
 Example command shape:
 
 ```powershell
-app\tools\flyway\flyway.cmd migrate
+app\tools\flyway\flyway.cmd -environment=production migrate
 ```
-
-## SchemaSpy setup
-
-SchemaSpy will be used after the first migration exists and `database/travis.db` can be generated.
-
-Official references:
-
-- SchemaSpy home: https://schemaspy.org/
-- SchemaSpy documentation: https://schemaspy.readthedocs.io/
