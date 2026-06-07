@@ -9,6 +9,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Sql)
 
 add_library(travis_data_database
     src/data/database/application_identity.cpp
+    src/data/database/database_bootstrap.cpp
     src/data/database/database_manager.cpp
     src/data/database/database_paths.cpp
 )

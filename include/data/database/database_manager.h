@@ -3,6 +3,8 @@
 #include <QSqlDatabase>
 #include <QString>
 
+// Owns opening, closing, and exposing the shared Qt SQLite connection.
+
 namespace travis::data::database {
 
 class DatabaseManager {

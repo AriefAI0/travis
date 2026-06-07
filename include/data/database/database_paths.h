@@ -2,6 +2,8 @@
 
 #include <QString>
 
+// Resolves where the SQLite database file should live in development and production.
+
 namespace travis::data::database {
 
 class DatabasePaths {

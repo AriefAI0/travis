@@ -1,5 +1,7 @@
 #pragma once
 
+// Defines the Qt app identity used to build stable AppData and settings paths.
+
 namespace travis::data::database {
 
 class ApplicationIdentity {
