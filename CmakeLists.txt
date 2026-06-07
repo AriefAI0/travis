@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION 3.21)
+
+project(travis VERSION 0.1.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Sql)
+
+add_library(travis_data_database
+    src/data/database/application_identity.cpp
+    src/data/database/database_manager.cpp
+    src/data/database/database_paths.cpp
+)
+
+target_include_directories(travis_data_database
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(travis_data_database
+    PUBLIC
+        Qt6::Core
+        Qt6::Sql
+)
