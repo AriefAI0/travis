@@ -1,0 +1,80 @@
+# Build directories
+/build/
+/build-*/
+/cmake-build-*/
+/out/
+/bin/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+Makefile
+install_manifest.txt
+
+# Qt generated files
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qmltypes
+.qmake.stash
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# IDE files
+.idea/
+.vs/
+.vscode/
+*.VC.db
+*.VC.opendb
+*.sln.docstates
+
+# Compiler and linker outputs
+*.obj
+*.o
+*.lo
+*.la
+*.a
+*.lib
+*.dll
+*.exe
+*.out
+*.app
+*.exp
+*.ilk
+*.pdb
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.user
+*.autosave
+*.bak
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Generated SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Flyway local/user artifacts
+database/flyway_runtime/*.user.toml
+database/flyway_runtime/*.artifact
+database/flyway_runtime/report.html
+database/flyway_runtime/report.json
