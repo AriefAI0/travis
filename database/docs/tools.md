@@ -2,19 +2,67 @@
 
 ## Flyway
 
-Run local migrations:
+Flyway is the schema migration tool for this project.
+
+Current project layout uses a Flyway Desktop project here:
+
+- `database/flyway_runtime`
+
+### Development
+
+Development uses the Flyway Desktop project:
+
+- project folder: `database/flyway_runtime`
+- migration source: `database/flyway_runtime/migrations`
+- schema model source: `database/flyway_runtime/schema-model`
+
+In development, `migrate` means:
+
+- create or update the target SQLite database
+- apply pending migration SQL files
+- keep your local schema aligned with the current migration history
+
+### Manual CLI
+
+If you use the Flyway CLI directly, run it against the Flyway project folder:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\database\scripts\run-flyway.ps1 -Command migrate
+.\database\tools\flyway\flyway.cmd info
+.\database\tools\flyway\flyway.cmd migrate
+.\database\tools\flyway\flyway.cmd validate
+.\database\tools\flyway\flyway.cmd repair
 ```
 
-If Flyway is not on `PATH`, pass the executable path:
+Run those commands from:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\database\scripts\run-flyway.ps1 -Command migrate -FlywayPath "C:\path\to\flyway.cmd"
-```
+- `database/flyway_runtime`
+
+What each command does:
+
+- `info`: shows current migration status and which versions are applied
+- `migrate`: applies pending SQL migrations to the configured SQLite database
+- `validate`: checks whether applied migrations match the local migration files
+- `repair`: fixes Flyway metadata when history state needs cleanup after a failed change
+
+### Production
+
+Production uses the same Flyway migration concept, but with the Flyway CLI bundled inside the shipped application or update package.
+
+In production, the expected approach is:
+
+- keep using versioned SQL migrations from `database/flyway_runtime/migrations`
+- bundle the Flyway CLI with the application or updater
+- run `flyway migrate` automatically against the installed user database
+- use a production-specific Flyway config if the DB path differs from local development
+- trigger migration before the app starts using repositories and services
+
+Simple rule:
+
+- development uses the Flyway Desktop project in `database/flyway_runtime`
+- production should use Flyway too, but with a bundled CLI and production-safe configuration
 
 ## Notes
 
-- Flyway's official SQLite JDBC URL format is `jdbc:sqlite:database`
+- Flyway Desktop generated the project folders automatically
 - SchemaSpy setup will be added after the first migration exists
+- setup details live in [setupdb.md](/C:/Users/arief/OneDrive/Desktop/travis-v2/travis/database/docs/setupdb.md)

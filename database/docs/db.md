@@ -9,8 +9,9 @@ This project uses:
 
 ## Structure
 
-- `schema/`: reference SQL drafts if needed before they are versioned
-- `migrations/`: versioned Flyway SQL migrations
+- `flyway_runtime/`: Flyway project created from Flyway Desktop
+- `flyway_runtime/migrations/`: versioned Flyway SQL migrations
+- `flyway_runtime/schema-model/`: Flyway schema model files
 - `docs/`: generated database documentation output
 - `scripts/`: local helper scripts for migration commands
 
@@ -28,9 +29,10 @@ This project uses:
 
 ## Local database
 
-- Database file: `database/travis.db`
-- Flyway history table: managed inside the SQLite database by Flyway
+- Database target is managed through the Flyway Desktop project configuration
+- Flyway history table is managed inside the SQLite database by Flyway
 
 ## References
 
 - [tools.md](/C:/Users/arief/OneDrive/Desktop/travis-v2/travis/database/docs/tools.md)
+- [setupdb.md](/C:/Users/arief/OneDrive/Desktop/travis-v2/travis/database/docs/setupdb.md)
