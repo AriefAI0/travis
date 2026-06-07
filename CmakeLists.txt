@@ -12,6 +12,9 @@ add_library(travis_data_database
     src/data/database/database_bootstrap.cpp
     src/data/database/database_manager.cpp
     src/data/database/database_paths.cpp
+    src/data/repositories/base_repository.cpp
+    src/data/repositories/project_repository.cpp
+    src/data/repositories/session_repository.cpp
 )
 
 target_include_directories(travis_data_database
