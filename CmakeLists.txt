@@ -18,11 +18,15 @@ add_library(travis_data_database
     src/data/repositories/execution_unit_repository.cpp
     src/data/repositories/inspection_type_repository.cpp
     src/data/repositories/item_repository.cpp
+    src/data/repositories/master_video_repository.cpp
     src/data/repositories/project_repository.cpp
     src/data/repositories/result_repository.cpp
+    src/data/repositories/result_image_repository.cpp
     src/data/repositories/session_item_repository.cpp
     src/data/repositories/session_repository.cpp
+    src/data/repositories/timeline_thumbnail_repository.cpp
     src/data/repositories/tooling_repository.cpp
+    src/data/repositories/video_clip_repository.cpp
 )
 
 target_include_directories(travis_data_database
