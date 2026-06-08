@@ -73,7 +73,9 @@ target_link_libraries(travis_services
 )
 
 add_library(travis_application
+    src/application/playback/playback_workflow_service.cpp
     src/application/recording/recording_workflow_service.cpp
+    src/application/recovery/recording_recovery_service.cpp
 )
 
 target_include_directories(travis_application
