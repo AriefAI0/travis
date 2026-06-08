@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 
 include(CTest)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Sql Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Sql Test)
 
 set(TRAVIS_GSTREAMER_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/runtime/gstreamer/1.0/msvc_x86_64)
 
@@ -89,6 +89,7 @@ add_library(travis_media_engine
     src/mediaEngine/pipeline/caps.cpp
     src/mediaEngine/pipeline/dynamic_pad.cpp
     src/mediaEngine/pipeline/errors.cpp
+    src/mediaEngine/preview/preview_engine.cpp
     src/mediaEngine/recording/recording_engine.cpp
     src/mediaEngine/recording/shared/recording_finalization.cpp
     src/mediaEngine/recording/shared/recording_validation.cpp
@@ -115,6 +116,7 @@ target_link_directories(travis_media_engine
 target_link_libraries(travis_media_engine
     PUBLIC
         Qt6::Core
+        Qt6::Quick
         gstreamer-1.0
         gstvideo-1.0
         gstapp-1.0
@@ -123,6 +125,7 @@ target_link_libraries(travis_media_engine
 )
 
 add_library(travis_ui
+    src/ui/controllers/preview_surface_controller.cpp
     src/ui/viewmodels/recording_viewmodel.cpp
 )
 
@@ -134,7 +137,9 @@ target_include_directories(travis_ui
 target_link_libraries(travis_ui
     PUBLIC
         Qt6::Core
+        Qt6::Quick
         travis_application
+        travis_media_engine
 )
 
 if(BUILD_TESTING)

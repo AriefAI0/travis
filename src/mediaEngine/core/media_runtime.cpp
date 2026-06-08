@@ -10,10 +10,13 @@ namespace travis::media_engine::core {
 
 namespace {
 
-constexpr std::array<const char*, 6> kRequiredElements = {
+constexpr std::array<const char*, 9> kRequiredElements = {
     "ndisrc",
     "ndisrcdemux",
     "mfvideosrc",
+    "qml6glsink",
+    "glupload",
+    "glcolorconvert",
     "qsvh264enc",
     "h264parse",
     "matroskamux",

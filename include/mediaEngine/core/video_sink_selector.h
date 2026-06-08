@@ -2,7 +2,7 @@
 
 #include <gst/gst.h>
 
-// Selects the best available preview sink for the current Windows runtime.
+// Creates the QML-native preview sink used by the embedded preview engine.
 
 namespace travis::media_engine::core {
 
