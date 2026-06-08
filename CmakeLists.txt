@@ -66,6 +66,50 @@ target_link_libraries(travis_services
         travis_data_database
 )
 
+add_library(travis_application
+    src/application/recording/recording_workflow_service.cpp
+)
+
+target_include_directories(travis_application
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(travis_application
+    PUBLIC
+        Qt6::Core
+        travis_services
+)
+
+add_library(travis_media_engine
+    src/mediaEngine/core/media_runtime.cpp
+)
+
+target_include_directories(travis_media_engine
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(travis_media_engine
+    PUBLIC
+        Qt6::Core
+)
+
+add_library(travis_ui
+    src/ui/viewmodels/recording_viewmodel.cpp
+)
+
+target_include_directories(travis_ui
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(travis_ui
+    PUBLIC
+        Qt6::Core
+        travis_application
+)
+
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
