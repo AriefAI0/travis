@@ -10,6 +10,8 @@ include(CTest)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Sql Test)
 
+set(TRAVIS_GSTREAMER_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/runtime/gstreamer/1.0/msvc_x86_64)
+
 add_library(travis_data_database
     src/app/app_context.cpp
     src/data/database/application_identity.cpp
@@ -83,16 +85,37 @@ target_link_libraries(travis_application
 
 add_library(travis_media_engine
     src/mediaEngine/core/media_runtime.cpp
+    src/mediaEngine/core/video_sink_selector.cpp
+    src/mediaEngine/pipeline/caps.cpp
+    src/mediaEngine/pipeline/dynamic_pad.cpp
+    src/mediaEngine/pipeline/errors.cpp
+    src/mediaEngine/sources/device_capture/device_capture_video_source.cpp
+    src/mediaEngine/sources/ndi/ndi_source_reference.cpp
+    src/mediaEngine/sources/ndi/ndi_video_source.cpp
 )
 
 target_include_directories(travis_media_engine
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${TRAVIS_GSTREAMER_ROOT}/include
+        ${TRAVIS_GSTREAMER_ROOT}/include/gstreamer-1.0
+        ${TRAVIS_GSTREAMER_ROOT}/include/glib-2.0
+        ${TRAVIS_GSTREAMER_ROOT}/lib/glib-2.0/include
+)
+
+target_link_directories(travis_media_engine
+    PUBLIC
+        ${TRAVIS_GSTREAMER_ROOT}/lib
 )
 
 target_link_libraries(travis_media_engine
     PUBLIC
         Qt6::Core
+        gstreamer-1.0
+        gstvideo-1.0
+        gstapp-1.0
+        gobject-2.0
+        glib-2.0
 )
 
 add_library(travis_ui
