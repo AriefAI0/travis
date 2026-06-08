@@ -1,4 +1,4 @@
-#include "mediaEngine/recording/recording_validation.h"
+#include "mediaEngine/recording/shared/recording_validation.h"
 
 // Enforces the currently supported audio-input constraints for recording.
 

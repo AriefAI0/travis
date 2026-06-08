@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "mediaEngine/recording/recording_types.h"
+#include "mediaEngine/recording/shared/recording_types.h"
 #include "mediaEngine/session/media_source_session.h"
 
 // Owns the media-engine recording boundary and source-preparation lifecycle.

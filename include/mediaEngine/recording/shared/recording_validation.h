@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "mediaEngine/recording/recording_types.h"
+#include "mediaEngine/recording/shared/recording_types.h"
 
 // Validates recording-input combinations before pipeline construction begins.
 

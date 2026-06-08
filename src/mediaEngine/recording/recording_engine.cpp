@@ -1,6 +1,6 @@
 #include "mediaEngine/recording/recording_engine.h"
 
-#include "mediaEngine/recording/recording_validation.h"
+#include "mediaEngine/recording/shared/recording_validation.h"
 
 // Provides the first embedded recording-engine lifecycle boundary on top of shared source sessions.
 

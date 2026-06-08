@@ -1,4 +1,4 @@
-#include "mediaEngine/recording/recording_finalization.h"
+#include "mediaEngine/recording/shared/recording_finalization.h"
 
 #include "mediaEngine/pipeline/errors.h"
 

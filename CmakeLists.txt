@@ -90,8 +90,8 @@ add_library(travis_media_engine
     src/mediaEngine/pipeline/dynamic_pad.cpp
     src/mediaEngine/pipeline/errors.cpp
     src/mediaEngine/recording/recording_engine.cpp
-    src/mediaEngine/recording/recording_finalization.cpp
-    src/mediaEngine/recording/recording_validation.cpp
+    src/mediaEngine/recording/shared/recording_finalization.cpp
+    src/mediaEngine/recording/shared/recording_validation.cpp
     src/mediaEngine/session/media_source_session.cpp
     src/mediaEngine/sources/device_capture/device_capture_video_source.cpp
     src/mediaEngine/sources/ndi/ndi_source_reference.cpp

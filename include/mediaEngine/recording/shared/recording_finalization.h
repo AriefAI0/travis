@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "mediaEngine/recording/recording_types.h"
+#include "mediaEngine/recording/shared/recording_types.h"
 
 // Waits for EOS-driven recording finalization events and element-specific completion messages.
 
