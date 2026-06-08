@@ -5,7 +5,9 @@ project(travis VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Sql)
+include(CTest)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Sql Test)
 
 add_library(travis_data_database
     src/app/app_context.cpp
@@ -62,3 +64,7 @@ target_link_libraries(travis_services
         Qt6::Core
         travis_data_database
 )
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
