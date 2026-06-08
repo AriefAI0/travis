@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QVariantList>
 
 #include <optional>
 #include <vector>
@@ -70,6 +71,8 @@ public:
     [[nodiscard]] QString statusMessage() const;
     [[nodiscard]] QString lastError() const;
 
+    // Replaces the current audio-input configuration from QML dialog state.
+    Q_INVOKABLE bool configureAudioInputs(const QVariantList& audioInputs);
     Q_INVOKABLE bool startRecording();
     Q_INVOKABLE bool stopRecording();
     Q_INVOKABLE bool pauseRecording();
@@ -105,6 +108,7 @@ private:
     void syncFromActiveMasterVideo();
     void emitRecordingStateChanged();
 
+    std::vector<travis::media_engine::recording::RecordingAudioInput> audioInputs_;
     travis::application::recording::RecordingWorkflowService& recordingWorkflowService_;
     QString recordingId_;
     qint64 sessionId_ = 0;

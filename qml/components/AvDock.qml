@@ -4,13 +4,39 @@ import QtQuick.Layouts
 
 import "../dialogs"
 
-// Hosts the workspace A/V dock and launches the source/audio configuration dialogs.
+// Hosts the workspace A/V dock with inline audio slots and popout dialogs for video and advanced audio settings.
 
 Rectangle {
     id: root
 
     property var recordingViewModel
     property var previewController
+    property var audioSlots: [
+        {
+            slotId: "audio-input-1",
+            displayName: "Audio Input 1",
+            deviceName: "",
+            devicePath: "",
+            sourceElement: "wasapi2src",
+            volume: 100,
+            mono: false,
+            balance: 0,
+            syncOffsetMs: 0,
+            monitoringMode: "off"
+        },
+        {
+            slotId: "audio-input-2",
+            displayName: "Audio Input 2",
+            deviceName: "",
+            devicePath: "",
+            sourceElement: "wasapi2src",
+            volume: 100,
+            mono: false,
+            balance: 0,
+            syncOffsetMs: 0,
+            monitoringMode: "off"
+        }
+    ]
 
     radius: 10
     color: "#18212a"
@@ -19,15 +45,41 @@ Rectangle {
 
     property int activeTabIndex: 0
 
+    function updateAudioConfiguration() {
+        if (!recordingViewModel) {
+            return
+        }
+
+        const configuredAudioInputs = []
+        for (let index = 0; index < audioSlots.length; ++index) {
+            const slot = audioSlots[index]
+            if (slot.deviceName.length === 0 && slot.devicePath.length === 0) {
+                continue
+            }
+
+            configuredAudioInputs.push({
+                deviceName: slot.deviceName,
+                devicePath: slot.devicePath,
+                sourceElement: slot.sourceElement
+            })
+        }
+
+        recordingViewModel.configureAudioInputs(configuredAudioInputs)
+    }
+
     SourceSelectionDialog {
         id: sourceSelectionDialog
         recordingViewModel: root.recordingViewModel
         previewController: root.previewController
     }
 
-    AudioInputDialog {
-        id: audioInputDialog
-        recordingViewModel: root.recordingViewModel
+    AdvancedAudioPropertiesDialog {
+        id: advancedAudioPropertiesDialog
+        audioSlots: root.audioSlots
+        onApply: function(nextSlots) {
+            root.audioSlots = nextSlots
+            root.updateAudioConfiguration()
+        }
     }
 
     ColumnLayout {
@@ -136,16 +188,121 @@ Rectangle {
                     anchors.fill: parent
                     spacing: 10
 
-                    Label {
-                        Layout.fillWidth: true
-                        color: "#9fb0be"
-                        text: "Configure audio input slots through the dialog."
-                        wrapMode: Text.Wrap
+                    Repeater {
+                        model: root.audioSlots
+
+                        delegate: Rectangle {
+                            Layout.fillWidth: true
+                            color: "#10171d"
+                            radius: 8
+                            border.color: "#2f3a44"
+                            border.width: 1
+                            implicitHeight: slotContent.implicitHeight + 18
+
+                            ColumnLayout {
+                                id: slotContent
+
+                                anchors.fill: parent
+                                anchors.margins: 9
+                                spacing: 8
+
+                                Label {
+                                    color: "#eef3f7"
+                                    text: modelData.displayName
+                                }
+
+                                TextField {
+                                    Layout.fillWidth: true
+                                    placeholderText: "Device name"
+                                    text: modelData.deviceName
+                                    onTextChanged: {
+                                        const nextSlots = root.audioSlots.slice()
+                                        nextSlots[index] = {
+                                            slotId: nextSlots[index].slotId,
+                                            displayName: nextSlots[index].displayName,
+                                            deviceName: text,
+                                            devicePath: nextSlots[index].devicePath,
+                                            sourceElement: nextSlots[index].sourceElement,
+                                            volume: nextSlots[index].volume,
+                                            mono: nextSlots[index].mono,
+                                            balance: nextSlots[index].balance,
+                                            syncOffsetMs: nextSlots[index].syncOffsetMs,
+                                            monitoringMode: nextSlots[index].monitoringMode
+                                        }
+                                        root.audioSlots = nextSlots
+                                        root.updateAudioConfiguration()
+                                    }
+                                }
+
+                                TextField {
+                                    Layout.fillWidth: true
+                                    placeholderText: "Device path"
+                                    text: modelData.devicePath
+                                    onTextChanged: {
+                                        const nextSlots = root.audioSlots.slice()
+                                        nextSlots[index] = {
+                                            slotId: nextSlots[index].slotId,
+                                            displayName: nextSlots[index].displayName,
+                                            deviceName: nextSlots[index].deviceName,
+                                            devicePath: text,
+                                            sourceElement: nextSlots[index].sourceElement,
+                                            volume: nextSlots[index].volume,
+                                            mono: nextSlots[index].mono,
+                                            balance: nextSlots[index].balance,
+                                            syncOffsetMs: nextSlots[index].syncOffsetMs,
+                                            monitoringMode: nextSlots[index].monitoringMode
+                                        }
+                                        root.audioSlots = nextSlots
+                                        root.updateAudioConfiguration()
+                                    }
+                                }
+
+                                TextField {
+                                    Layout.fillWidth: true
+                                    placeholderText: "Source element"
+                                    text: modelData.sourceElement
+                                    onTextChanged: {
+                                        const nextSlots = root.audioSlots.slice()
+                                        nextSlots[index] = {
+                                            slotId: nextSlots[index].slotId,
+                                            displayName: nextSlots[index].displayName,
+                                            deviceName: nextSlots[index].deviceName,
+                                            devicePath: nextSlots[index].devicePath,
+                                            sourceElement: text,
+                                            volume: nextSlots[index].volume,
+                                            mono: nextSlots[index].mono,
+                                            balance: nextSlots[index].balance,
+                                            syncOffsetMs: nextSlots[index].syncOffsetMs,
+                                            monitoringMode: nextSlots[index].monitoringMode
+                                        }
+                                        root.audioSlots = nextSlots
+                                        root.updateAudioConfiguration()
+                                    }
+                                }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+
+                                    Label {
+                                        color: "#aebbc6"
+                                        text: `Volume ${modelData.volume}%`
+                                    }
+
+                                    Slider {
+                                        Layout.fillWidth: true
+                                        from: 0
+                                        to: 100
+                                        value: modelData.volume
+                                        enabled: false
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     Button {
-                        text: "Open Audio Dialog"
-                        onClicked: audioInputDialog.open()
+                        text: "Advanced Audio Properties"
+                        onClicked: advancedAudioPropertiesDialog.open()
                     }
                 }
             }

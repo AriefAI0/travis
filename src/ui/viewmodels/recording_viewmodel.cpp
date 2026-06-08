@@ -1,5 +1,7 @@
 #include "ui/viewmodels/recording_viewmodel.h"
 
+#include <QVariantMap>
+
 // Bridges QML recording actions to the application workflow while keeping UI state explicit.
 
 namespace travis::ui::viewmodels {
@@ -152,7 +154,56 @@ QString RecordingViewModel::lastError() const {
     return lastError_;
 }
 
+bool RecordingViewModel::configureAudioInputs(const QVariantList& audioInputs) {
+    std::vector<travis::media_engine::recording::RecordingAudioInput> nextAudioInputs;
+    nextAudioInputs.reserve(static_cast<std::size_t>(audioInputs.size()));
+
+    for (const QVariant& audioInputValue : audioInputs) {
+        const QVariantMap audioInput = audioInputValue.toMap();
+        const QString deviceName = audioInput.value(QStringLiteral("deviceName")).toString().trimmed();
+        const QString devicePath = audioInput.value(QStringLiteral("devicePath")).toString().trimmed();
+        const QString sourceElement = audioInput.value(QStringLiteral("sourceElement")).toString().trimmed();
+
+        if (deviceName.isEmpty() && devicePath.isEmpty()) {
+            setLastError(QStringLiteral("Each audio input needs a device name or device path"));
+            return false;
+        }
+
+        nextAudioInputs.push_back(travis::media_engine::recording::RecordingAudioInput{
+            .deviceName = deviceName.toStdString(),
+            .devicePath = devicePath.toStdString(),
+            .sourceElement = sourceElement.toStdString(),
+        });
+    }
+
+    audioInputs_ = std::move(nextAudioInputs);
+    setLastError(QString{});
+    setStatusMessage(QStringLiteral("Audio inputs updated"));
+    return true;
+}
+
 bool RecordingViewModel::startRecording() {
+    if (sourceKind_.trimmed().isEmpty()) {
+        setLastError(QStringLiteral("sourceKind is required"));
+        return false;
+    }
+
+    if (sourceName_.trimmed().isEmpty()) {
+        setLastError(QStringLiteral("sourceName is required"));
+        return false;
+    }
+
+    std::vector<travis::media_engine::recording::RecordingVideoInput> videoInputs;
+    videoInputs.push_back(travis::media_engine::recording::RecordingVideoInput{
+        .sourceKind = sourceKind_.trimmed().toStdString(),
+        .sourceName = sourceName_.trimmed().toStdString(),
+        .urlAddress = urlAddress_.trimmed().toStdString(),
+        .devicePath = devicePath_.trimmed().toStdString(),
+        .sourceElement = sourceElement_.trimmed().toStdString(),
+        .width = 1920,
+        .height = 1080,
+    });
+
     const auto result = recordingWorkflowService_.startRecording({
         .recordingId = recordingId_,
         .sessionId = sessionId_,
@@ -163,8 +214,8 @@ bool RecordingViewModel::startRecording() {
         .sourceElement = sourceElement_,
         .outputPath = outputPath_,
         .sourceLabel = sourceLabel_,
-        .videoInputs = {},
-        .audioInputs = {},
+        .videoInputs = videoInputs,
+        .audioInputs = audioInputs_,
     });
 
     if (!result.ok) {
