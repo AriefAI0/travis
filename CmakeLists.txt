@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Sql)
 
 add_library(travis_data_database
+    src/app/app_context.cpp
     src/data/database/application_identity.cpp
     src/data/database/database_bootstrap.cpp
     src/data/database/database_manager.cpp
