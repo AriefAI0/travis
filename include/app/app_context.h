@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <QString>
 
 // Builds and owns the shared database, repository, and service objects for app startup.
@@ -78,29 +79,29 @@ public:
 private:
     travis::data::database::DatabaseBootstrap databaseBootstrap_;
 
-    travis::data::repositories::ProjectRepository projectRepository_;
-    travis::data::repositories::SessionRepository sessionRepository_;
-    travis::data::repositories::SessionItemRepository sessionItemRepository_;
-    travis::data::repositories::AssetRepository assetRepository_;
-    travis::data::repositories::ComponentRepository componentRepository_;
-    travis::data::repositories::ItemRepository itemRepository_;
-    travis::data::repositories::InspectionTypeRepository inspectionTypeRepository_;
-    travis::data::repositories::ExecutionUnitRepository executionUnitRepository_;
-    travis::data::repositories::ToolingRepository toolingRepository_;
-    travis::data::repositories::ResultRepository resultRepository_;
-    travis::data::repositories::ResultImageRepository resultImageRepository_;
-    travis::data::repositories::MasterVideoRepository masterVideoRepository_;
-    travis::data::repositories::VideoClipRepository videoClipRepository_;
-    travis::data::repositories::TimelineThumbnailRepository timelineThumbnailRepository_;
+    std::optional<travis::data::repositories::ProjectRepository> projectRepository_;
+    std::optional<travis::data::repositories::SessionRepository> sessionRepository_;
+    std::optional<travis::data::repositories::SessionItemRepository> sessionItemRepository_;
+    std::optional<travis::data::repositories::AssetRepository> assetRepository_;
+    std::optional<travis::data::repositories::ComponentRepository> componentRepository_;
+    std::optional<travis::data::repositories::ItemRepository> itemRepository_;
+    std::optional<travis::data::repositories::InspectionTypeRepository> inspectionTypeRepository_;
+    std::optional<travis::data::repositories::ExecutionUnitRepository> executionUnitRepository_;
+    std::optional<travis::data::repositories::ToolingRepository> toolingRepository_;
+    std::optional<travis::data::repositories::ResultRepository> resultRepository_;
+    std::optional<travis::data::repositories::ResultImageRepository> resultImageRepository_;
+    std::optional<travis::data::repositories::MasterVideoRepository> masterVideoRepository_;
+    std::optional<travis::data::repositories::VideoClipRepository> videoClipRepository_;
+    std::optional<travis::data::repositories::TimelineThumbnailRepository> timelineThumbnailRepository_;
 
-    travis::services::ProjectService projectService_;
-    travis::services::SessionService sessionService_;
-    travis::services::StructureService structureService_;
-    travis::services::ExecutionService executionService_;
-    travis::services::ResultService resultService_;
-    travis::services::ResultMediaService resultMediaService_;
-    travis::services::VideoService videoService_;
-    travis::services::InspectionClipService inspectionClipService_;
+    std::optional<travis::services::ProjectService> projectService_;
+    std::optional<travis::services::SessionService> sessionService_;
+    std::optional<travis::services::StructureService> structureService_;
+    std::optional<travis::services::ExecutionService> executionService_;
+    std::optional<travis::services::ResultService> resultService_;
+    std::optional<travis::services::ResultMediaService> resultMediaService_;
+    std::optional<travis::services::VideoService> videoService_;
+    std::optional<travis::services::InspectionClipService> inspectionClipService_;
 
     QString lastError_;
 };
