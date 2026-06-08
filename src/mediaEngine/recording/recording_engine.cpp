@@ -232,6 +232,49 @@ RecordingResult RecordingEngine::stopRecording(const std::string& recordingId) {
     return RecordingResult{false, "Recording is not running"};
 }
 
+RecordingResult RecordingEngine::startClipRecording(
+    const std::string& recordingId,
+    int clipId,
+    const std::string& outputPath
+) {
+    if (recordingId.empty()) {
+        return RecordingResult{false, "recordingId is required"};
+    }
+
+    const auto avPipeline = avRecordingPipelines_.find(recordingId);
+    if (avPipeline == avRecordingPipelines_.end()) {
+        return RecordingResult{false, "Recording is not running"};
+    }
+
+    return startAvInspectionClip(*avPipeline->second, clipId, outputPath);
+}
+
+RecordingResult RecordingEngine::stopClipRecording(const std::string& recordingId, int clipId) {
+    if (recordingId.empty()) {
+        return RecordingResult{false, "recordingId is required"};
+    }
+
+    const auto avPipeline = avRecordingPipelines_.find(recordingId);
+    if (avPipeline == avRecordingPipelines_.end()) {
+        return RecordingResult{false, "Recording is not running"};
+    }
+
+    return stopAvInspectionClip(*avPipeline->second, clipId);
+}
+
+RecordingResult RecordingEngine::cancelClipRecording(const std::string& recordingId, int clipId) {
+    if (recordingId.empty()) {
+        return RecordingResult{false, "recordingId is required"};
+    }
+
+    const auto avPipeline = avRecordingPipelines_.find(recordingId);
+    if (avPipeline == avRecordingPipelines_.end()) {
+        return RecordingResult{false, "Recording is not running"};
+    }
+
+    return cancelAvInspectionClip(*avPipeline->second, clipId);
+}
+
 RecordingPositionResult RecordingEngine::getRecordingPosition(const std::string& recordingId) const {
     if (recordingId.empty()) {
         return RecordingPositionResult{false, "recordingId is required", 0};

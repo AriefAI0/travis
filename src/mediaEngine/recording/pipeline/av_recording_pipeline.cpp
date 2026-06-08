@@ -1,11 +1,15 @@
 #include "mediaEngine/recording/pipeline/av_recording_pipeline.h"
 
 #include "mediaEngine/pipeline/errors.h"
+#include "mediaEngine/recording/shared/recording_finalization.h"
 #include "mediaEngine/recording/shared/recording_validation.h"
 
 #include <chrono>
+#include <mutex>
 
-// Builds the first dedicated in-process AV recording graph from shared live-source bridges.
+#include <gst/video/video-event.h>
+
+// Builds the in-process AV recording graph and optional clip branches from shared live-source bridges.
 
 namespace travis::media_engine::recording {
 
@@ -105,6 +109,53 @@ GstPadProbeReturn onMixedAudioBuffer(GstPad*, GstPadProbeInfo* info, gpointer us
     return GST_PAD_PROBE_REMOVE;
 }
 
+GstPadProbeReturn onClipBuffer(GstPad*, GstPadProbeInfo* info, gpointer userData) {
+    auto* clipBranch = static_cast<AvInspectionClipBranch*>(userData);
+
+    if ((GST_PAD_PROBE_INFO_TYPE(info) & GST_PAD_PROBE_TYPE_BUFFER) == 0) {
+        return GST_PAD_PROBE_OK;
+    }
+
+    GstBuffer* buffer = GST_PAD_PROBE_INFO_BUFFER(info);
+    if (buffer == nullptr || GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+        return GST_PAD_PROBE_OK;
+    }
+
+    if (clipBranch->valve != nullptr) {
+        g_object_set(clipBranch->valve, "drop", FALSE, nullptr);
+    }
+
+    if (clipBranch->audioActive && clipBranch->audioValve != nullptr) {
+        g_object_set(clipBranch->audioValve, "drop", FALSE, nullptr);
+    }
+
+    clipBranch->receivedBuffer = true;
+    clipBranch->openedOnKeyframe = true;
+    return GST_PAD_PROBE_REMOVE;
+}
+
+RecordingResult requestRecordingKeyframe(AvRecordingPipeline& pipeline) {
+    if (pipeline.videoEncoder == nullptr) {
+        return RecordingResult{false, "Recording video encoder is not available"};
+    }
+
+    GstPad* encoderSrcPad = gst_element_get_static_pad(pipeline.videoEncoder, "src");
+    if (encoderSrcPad == nullptr) {
+        return RecordingResult{false, "Failed to get recording encoder source pad"};
+    }
+
+    GstEvent* forceKeyUnit =
+        gst_video_event_new_upstream_force_key_unit(GST_CLOCK_TIME_NONE, TRUE, 0);
+    const gboolean keyframeRequested = gst_pad_send_event(encoderSrcPad, forceKeyUnit);
+    gst_object_unref(encoderSrcPad);
+
+    if (!keyframeRequested) {
+        return RecordingResult{false, "Failed to request recording keyframe"};
+    }
+
+    return RecordingResult{true, "Recording keyframe requested"};
+}
+
 RecordingResult waitForRecordingStart(AvRecordingPipeline& pipeline) {
     const auto deadline = std::chrono::steady_clock::now() + kAvRecordingStartTimeout;
 
@@ -150,8 +201,95 @@ RecordingResult waitForRecordingStart(AvRecordingPipeline& pipeline) {
     return RecordingResult{false, "Timed out waiting for recording data"};
 }
 
+RecordingResult removeAvInspectionClipBranch(
+    AvRecordingPipeline& pipeline,
+    AvInspectionClipBranch& clipBranch
+) {
+    if (clipBranch.audioQueue != nullptr) {
+        gst_element_set_state(clipBranch.audioQueue, GST_STATE_NULL);
+    }
+    if (clipBranch.audioValve != nullptr) {
+        gst_element_set_state(clipBranch.audioValve, GST_STATE_NULL);
+    }
+    if (clipBranch.queue != nullptr) {
+        gst_element_set_state(clipBranch.queue, GST_STATE_NULL);
+    }
+    if (clipBranch.valve != nullptr) {
+        gst_element_set_state(clipBranch.valve, GST_STATE_NULL);
+    }
+    if (clipBranch.parser != nullptr) {
+        gst_element_set_state(clipBranch.parser, GST_STATE_NULL);
+    }
+    if (clipBranch.muxer != nullptr) {
+        gst_element_set_state(clipBranch.muxer, GST_STATE_NULL);
+    }
+    if (clipBranch.sink != nullptr) {
+        gst_element_set_state(clipBranch.sink, GST_STATE_NULL);
+    }
+
+    if (pipeline.videoEncodedTee != nullptr && clipBranch.teeSrcPad != nullptr) {
+        gst_element_release_request_pad(pipeline.videoEncodedTee, clipBranch.teeSrcPad);
+        gst_object_unref(clipBranch.teeSrcPad);
+        clipBranch.teeSrcPad = nullptr;
+    }
+
+    if (pipeline.audioEncodedTee != nullptr && clipBranch.audioTeeSrcPad != nullptr) {
+        gst_element_release_request_pad(pipeline.audioEncodedTee, clipBranch.audioTeeSrcPad);
+        gst_object_unref(clipBranch.audioTeeSrcPad);
+        clipBranch.audioTeeSrcPad = nullptr;
+    }
+
+    if (clipBranch.muxer != nullptr && clipBranch.audioMuxerSinkPad != nullptr) {
+        gst_element_release_request_pad(clipBranch.muxer, clipBranch.audioMuxerSinkPad);
+        gst_object_unref(clipBranch.audioMuxerSinkPad);
+        clipBranch.audioMuxerSinkPad = nullptr;
+    }
+
+    if (pipeline.pipeline != nullptr) {
+        auto* bin = GST_BIN(pipeline.pipeline);
+
+        if (clipBranch.audioQueue != nullptr) {
+            gst_bin_remove(bin, clipBranch.audioQueue);
+            clipBranch.audioQueue = nullptr;
+        }
+        if (clipBranch.audioValve != nullptr) {
+            gst_bin_remove(bin, clipBranch.audioValve);
+            clipBranch.audioValve = nullptr;
+        }
+        if (clipBranch.queue != nullptr) {
+            gst_bin_remove(bin, clipBranch.queue);
+            clipBranch.queue = nullptr;
+        }
+        if (clipBranch.valve != nullptr) {
+            gst_bin_remove(bin, clipBranch.valve);
+            clipBranch.valve = nullptr;
+        }
+        if (clipBranch.parser != nullptr) {
+            gst_bin_remove(bin, clipBranch.parser);
+            clipBranch.parser = nullptr;
+        }
+        if (clipBranch.muxer != nullptr) {
+            gst_bin_remove(bin, clipBranch.muxer);
+            clipBranch.muxer = nullptr;
+        }
+        if (clipBranch.sink != nullptr) {
+            gst_bin_remove(bin, clipBranch.sink);
+            clipBranch.sink = nullptr;
+        }
+    }
+
+    return RecordingResult{true, "Recording clip branch removed"};
+}
+
+void removeAllAvInspectionClipBranches(AvRecordingPipeline& pipeline) {
+    while (!pipeline.inspectionClipBranches.empty()) {
+        auto clipBranch = pipeline.inspectionClipBranches.begin();
+        removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+        pipeline.inspectionClipBranches.erase(clipBranch);
+    }
+}
+
 RecordingResult prepareVideoPath(
-    const std::string& recordingId,
     const std::vector<AvRecordingVideoInput>& videoInputs,
     AvRecordingPipeline& pipeline
 ) {
@@ -171,6 +309,8 @@ RecordingResult prepareVideoPath(
     pipeline.videoEncoder = createRecordingVideoEncoder(encoderName);
     pipeline.videoParser = gst_element_factory_make("h264parse", nullptr);
     pipeline.videoH264CapsFilter = gst_element_factory_make("capsfilter", nullptr);
+    pipeline.videoEncodedTee = gst_element_factory_make("tee", nullptr);
+    pipeline.videoMasterQueue = gst_element_factory_make("queue", nullptr);
     pipeline.videoOutputValve = gst_element_factory_make("valve", nullptr);
     pipeline.muxer = gst_element_factory_make("matroskamux", nullptr);
     pipeline.sink = gst_element_factory_make("filesink", nullptr);
@@ -185,6 +325,8 @@ RecordingResult prepareVideoPath(
         pipeline.videoEncoder == nullptr ||
         pipeline.videoParser == nullptr ||
         pipeline.videoH264CapsFilter == nullptr ||
+        pipeline.videoEncodedTee == nullptr ||
+        pipeline.videoMasterQueue == nullptr ||
         pipeline.videoOutputValve == nullptr ||
         pipeline.muxer == nullptr ||
         pipeline.sink == nullptr) {
@@ -200,6 +342,16 @@ RecordingResult prepareVideoPath(
         nullptr
     );
     g_object_set(pipeline.videoQueue, "max-size-buffers", 0, "max-size-bytes", 0, "max-size-time", 0, nullptr);
+    g_object_set(
+        pipeline.videoMasterQueue,
+        "max-size-buffers",
+        0,
+        "max-size-bytes",
+        0,
+        "max-size-time",
+        0,
+        nullptr
+    );
     g_object_set(pipeline.videoOutputValve, "drop", TRUE, "drop-mode", 1, nullptr);
     g_object_set(pipeline.sink, "location", pipeline.outputPath.c_str(), "sync", FALSE, nullptr);
 
@@ -273,6 +425,8 @@ RecordingResult prepareVideoPath(
         pipeline.videoEncoder,
         pipeline.videoParser,
         pipeline.videoH264CapsFilter,
+        pipeline.videoEncodedTee,
+        pipeline.videoMasterQueue,
         pipeline.videoOutputValve,
         pipeline.muxer,
         pipeline.sink,
@@ -290,6 +444,8 @@ RecordingResult prepareVideoPath(
             pipeline.videoEncoder,
             pipeline.videoParser,
             pipeline.videoH264CapsFilter,
+            pipeline.videoEncodedTee,
+            pipeline.videoMasterQueue,
             pipeline.videoOutputValve,
             pipeline.muxer,
             pipeline.sink,
@@ -312,7 +468,6 @@ RecordingResult prepareVideoPath(
     );
     gst_object_unref(videoQueueSrcPad);
 
-    (void)recordingId;
     return RecordingResult{true, "Recording video path prepared"};
 }
 
@@ -331,6 +486,8 @@ RecordingResult prepareAudioPath(
     pipeline.audioMixerResample = gst_element_factory_make("audioresample", nullptr);
     pipeline.audioMixerCapsFilter = gst_element_factory_make("capsfilter", nullptr);
     pipeline.audioEncoder = gst_element_factory_make("opusenc", nullptr);
+    pipeline.audioEncodedTee = gst_element_factory_make("tee", nullptr);
+    pipeline.audioMasterQueue = gst_element_factory_make("queue", nullptr);
     pipeline.audioOutputValve = gst_element_factory_make("valve", nullptr);
 
     if (pipeline.audioMixer == nullptr ||
@@ -339,12 +496,24 @@ RecordingResult prepareAudioPath(
         pipeline.audioMixerResample == nullptr ||
         pipeline.audioMixerCapsFilter == nullptr ||
         pipeline.audioEncoder == nullptr ||
+        pipeline.audioEncodedTee == nullptr ||
+        pipeline.audioMasterQueue == nullptr ||
         pipeline.audioOutputValve == nullptr) {
         return RecordingResult{false, "Failed to create recording audio pipeline elements"};
     }
 
     g_object_set(
         pipeline.audioMixerQueue,
+        "max-size-buffers",
+        0,
+        "max-size-bytes",
+        0,
+        "max-size-time",
+        0,
+        nullptr
+    );
+    g_object_set(
+        pipeline.audioMasterQueue,
         "max-size-buffers",
         0,
         "max-size-bytes",
@@ -380,6 +549,8 @@ RecordingResult prepareAudioPath(
         pipeline.audioMixerResample,
         pipeline.audioMixerCapsFilter,
         pipeline.audioEncoder,
+        pipeline.audioEncodedTee,
+        pipeline.audioMasterQueue,
         pipeline.audioOutputValve,
         nullptr
     );
@@ -391,6 +562,8 @@ RecordingResult prepareAudioPath(
             pipeline.audioMixerResample,
             pipeline.audioMixerCapsFilter,
             pipeline.audioEncoder,
+            pipeline.audioEncodedTee,
+            pipeline.audioMasterQueue,
             pipeline.audioOutputValve,
             pipeline.muxer,
             nullptr
@@ -536,7 +709,7 @@ RecordingResult startAvRecordingPipeline(
         return RecordingResult{false, "Failed to create recording pipeline"};
     }
 
-    const auto videoPrepareResult = prepareVideoPath(recordingId, videoInputs, pipeline);
+    const auto videoPrepareResult = prepareVideoPath(videoInputs, pipeline);
     if (!videoPrepareResult.ok) {
         removeAvRecordingPipeline(pipeline);
         return videoPrepareResult;
@@ -636,7 +809,372 @@ RecordingResult stopAvRecordingPipeline(AvRecordingPipeline& pipeline) {
     return RecordingResult{false, "Timed out waiting for recording finalization"};
 }
 
+RecordingResult startAvInspectionClip(
+    AvRecordingPipeline& pipeline,
+    int clipId,
+    const std::string& outputPath
+) {
+    if (pipeline.pipeline == nullptr || pipeline.videoEncodedTee == nullptr) {
+        return RecordingResult{false, "Recording pipeline is not running"};
+    }
+
+    if (clipId < 1) {
+        return RecordingResult{false, "clipId must be a positive integer"};
+    }
+
+    const auto outputValidationResult = validateRecordingOutputPath(outputPath);
+    if (!outputValidationResult.ok) {
+        return outputValidationResult;
+    }
+
+    if (pipeline.inspectionClipBranches.find(clipId) != pipeline.inspectionClipBranches.end()) {
+        return RecordingResult{false, "Clip recording is already running"};
+    }
+
+    auto clipBranch = std::make_unique<AvInspectionClipBranch>();
+    clipBranch->clipId = clipId;
+    clipBranch->outputPath = outputPath;
+    clipBranch->queue = gst_element_factory_make("queue", nullptr);
+    clipBranch->valve = gst_element_factory_make("valve", nullptr);
+    clipBranch->parser = gst_element_factory_make("h264parse", nullptr);
+    clipBranch->muxer = gst_element_factory_make("matroskamux", nullptr);
+    clipBranch->sink = gst_element_factory_make("filesink", nullptr);
+    clipBranch->audioActive = pipeline.audioActive && pipeline.audioEncodedTee != nullptr;
+
+    if (clipBranch->audioActive) {
+        clipBranch->audioQueue = gst_element_factory_make("queue", nullptr);
+        clipBranch->audioValve = gst_element_factory_make("valve", nullptr);
+    }
+
+    if (clipBranch->queue == nullptr ||
+        clipBranch->valve == nullptr ||
+        clipBranch->parser == nullptr ||
+        clipBranch->muxer == nullptr ||
+        clipBranch->sink == nullptr ||
+        (clipBranch->audioActive &&
+         (clipBranch->audioQueue == nullptr || clipBranch->audioValve == nullptr))) {
+        return RecordingResult{false, "Failed to create recording clip elements"};
+    }
+
+    g_object_set(clipBranch->queue, "max-size-buffers", 0, "max-size-bytes", 0, "max-size-time", 0, nullptr);
+    g_object_set(clipBranch->valve, "drop", TRUE, "drop-mode", 1, nullptr);
+    if (clipBranch->audioActive) {
+        g_object_set(
+            clipBranch->audioQueue,
+            "max-size-buffers",
+            0,
+            "max-size-bytes",
+            0,
+            "max-size-time",
+            0,
+            nullptr
+        );
+        g_object_set(clipBranch->audioValve, "drop", TRUE, "drop-mode", 1, nullptr);
+    }
+    g_object_set(clipBranch->parser, "config-interval", -1, nullptr);
+    g_object_set(clipBranch->muxer, "offset-to-zero", TRUE, nullptr);
+    g_object_set(clipBranch->sink, "location", outputPath.c_str(), "sync", FALSE, nullptr);
+
+    gst_bin_add_many(
+        GST_BIN(pipeline.pipeline),
+        clipBranch->queue,
+        clipBranch->valve,
+        clipBranch->parser,
+        clipBranch->muxer,
+        clipBranch->sink,
+        nullptr
+    );
+
+    if (clipBranch->audioActive) {
+        gst_bin_add_many(
+            GST_BIN(pipeline.pipeline),
+            clipBranch->audioQueue,
+            clipBranch->audioValve,
+            nullptr
+        );
+    }
+
+    if (!gst_element_link_many(
+            clipBranch->queue,
+            clipBranch->valve,
+            clipBranch->parser,
+            clipBranch->muxer,
+            clipBranch->sink,
+            nullptr
+        )) {
+        removeAvInspectionClipBranch(pipeline, *clipBranch);
+        return RecordingResult{false, "Failed to link recording clip branch"};
+    }
+
+    if (clipBranch->audioActive) {
+        if (!gst_element_link_many(
+                clipBranch->audioQueue,
+                clipBranch->audioValve,
+                nullptr
+            )) {
+            removeAvInspectionClipBranch(pipeline, *clipBranch);
+            return RecordingResult{false, "Failed to link recording clip audio branch"};
+        }
+
+        GstPad* audioValveSrcPad = gst_element_get_static_pad(clipBranch->audioValve, "src");
+        clipBranch->audioMuxerSinkPad = gst_element_request_pad_simple(clipBranch->muxer, "audio_%u");
+
+        if (audioValveSrcPad == nullptr || clipBranch->audioMuxerSinkPad == nullptr) {
+            if (audioValveSrcPad != nullptr) {
+                gst_object_unref(audioValveSrcPad);
+            }
+            removeAvInspectionClipBranch(pipeline, *clipBranch);
+            return RecordingResult{false, "Failed to prepare recording clip audio muxer pad"};
+        }
+
+        const GstPadLinkReturn audioMuxerLinkResult =
+            gst_pad_link(audioValveSrcPad, clipBranch->audioMuxerSinkPad);
+        gst_object_unref(audioValveSrcPad);
+
+        if (audioMuxerLinkResult != GST_PAD_LINK_OK) {
+            removeAvInspectionClipBranch(pipeline, *clipBranch);
+            return RecordingResult{false, "Failed to connect recording clip audio to muxer"};
+        }
+    }
+
+    GstPad* queueSinkPad = gst_element_get_static_pad(clipBranch->queue, "sink");
+    clipBranch->teeSrcPad = gst_element_request_pad_simple(pipeline.videoEncodedTee, "src_%u");
+
+    if (queueSinkPad == nullptr || clipBranch->teeSrcPad == nullptr) {
+        if (queueSinkPad != nullptr) {
+            gst_object_unref(queueSinkPad);
+        }
+        removeAvInspectionClipBranch(pipeline, *clipBranch);
+        return RecordingResult{false, "Failed to prepare recording clip tee pads"};
+    }
+
+    const GstPadLinkReturn linkResult = gst_pad_link(clipBranch->teeSrcPad, queueSinkPad);
+    gst_object_unref(queueSinkPad);
+    if (linkResult != GST_PAD_LINK_OK) {
+        removeAvInspectionClipBranch(pipeline, *clipBranch);
+        return RecordingResult{false, "Failed to connect recording clip video branch"};
+    }
+
+    if (clipBranch->audioActive) {
+        GstPad* audioQueueSinkPad = gst_element_get_static_pad(clipBranch->audioQueue, "sink");
+        clipBranch->audioTeeSrcPad = gst_element_request_pad_simple(pipeline.audioEncodedTee, "src_%u");
+
+        if (audioQueueSinkPad == nullptr || clipBranch->audioTeeSrcPad == nullptr) {
+            if (audioQueueSinkPad != nullptr) {
+                gst_object_unref(audioQueueSinkPad);
+            }
+            removeAvInspectionClipBranch(pipeline, *clipBranch);
+            return RecordingResult{false, "Failed to prepare recording clip audio tee pads"};
+        }
+
+        const GstPadLinkReturn audioLinkResult =
+            gst_pad_link(clipBranch->audioTeeSrcPad, audioQueueSinkPad);
+        gst_object_unref(audioQueueSinkPad);
+        if (audioLinkResult != GST_PAD_LINK_OK) {
+            removeAvInspectionClipBranch(pipeline, *clipBranch);
+            return RecordingResult{false, "Failed to connect recording clip audio branch"};
+        }
+    }
+
+    GstPad* queueSrcPad = gst_element_get_static_pad(clipBranch->queue, "src");
+    if (queueSrcPad == nullptr) {
+        removeAvInspectionClipBranch(pipeline, *clipBranch);
+        return RecordingResult{false, "Failed to inspect recording clip queue src pad"};
+    }
+    gst_pad_add_probe(
+        queueSrcPad,
+        GST_PAD_PROBE_TYPE_BUFFER,
+        onClipBuffer,
+        clipBranch.get(),
+        nullptr
+    );
+    gst_object_unref(queueSrcPad);
+
+    gst_element_sync_state_with_parent(clipBranch->sink);
+    gst_element_sync_state_with_parent(clipBranch->muxer);
+    gst_element_sync_state_with_parent(clipBranch->parser);
+    gst_element_sync_state_with_parent(clipBranch->valve);
+    gst_element_sync_state_with_parent(clipBranch->queue);
+    if (clipBranch->audioActive) {
+        gst_element_sync_state_with_parent(clipBranch->audioValve);
+        gst_element_sync_state_with_parent(clipBranch->audioQueue);
+    }
+
+    const auto keyframeRequestResult = requestRecordingKeyframe(pipeline);
+    if (!keyframeRequestResult.ok) {
+        removeAvInspectionClipBranch(pipeline, *clipBranch);
+        return keyframeRequestResult;
+    }
+
+    const auto deadline = std::chrono::steady_clock::now() + kAvRecordingStartTimeout;
+    while (std::chrono::steady_clock::now() < deadline) {
+        GstMessage* message = gst_bus_timed_pop_filtered(
+            pipeline.bus,
+            100 * GST_MSECOND,
+            static_cast<GstMessageType>(GST_MESSAGE_ERROR | GST_MESSAGE_EOS)
+        );
+
+        if (message != nullptr) {
+            switch (GST_MESSAGE_TYPE(message)) {
+            case GST_MESSAGE_ERROR: {
+                const auto failureMessage = travis::media_engine::pipeline::readGstErrorMessage(message);
+                gst_message_unref(message);
+                removeAvInspectionClipBranch(pipeline, *clipBranch);
+                return RecordingResult{false, failureMessage};
+            }
+            case GST_MESSAGE_EOS:
+                gst_message_unref(message);
+                removeAvInspectionClipBranch(pipeline, *clipBranch);
+                return RecordingResult{false, "Recording ended before clip data was available"};
+            default:
+                gst_message_unref(message);
+                break;
+            }
+        }
+
+        if (clipBranch->openedOnKeyframe) {
+            pipeline.inspectionClipBranches[clipId] = std::move(clipBranch);
+            return RecordingResult{true, "Recording clip started"};
+        }
+    }
+
+    removeAvInspectionClipBranch(pipeline, *clipBranch);
+    return RecordingResult{false, "Timed out waiting for recording clip keyframe"};
+}
+
+RecordingResult stopAvInspectionClip(AvRecordingPipeline& pipeline, int clipId) {
+    if (clipId < 1) {
+        return RecordingResult{false, "clipId must be a positive integer"};
+    }
+
+    const auto clipBranch = pipeline.inspectionClipBranches.find(clipId);
+    if (clipBranch == pipeline.inspectionClipBranches.end()) {
+        return RecordingResult{false, "Clip recording is not running"};
+    }
+
+    if (clipBranch->second->queue == nullptr || clipBranch->second->sink == nullptr) {
+        return RecordingResult{false, "Recording clip branch is not available"};
+    }
+
+    RecordingEosProbeContext eosContext{false};
+    GstPad* sinkPad = gst_element_get_static_pad(clipBranch->second->sink, "sink");
+    if (sinkPad == nullptr) {
+        removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+        pipeline.inspectionClipBranches.erase(clipBranch);
+        return RecordingResult{false, "Failed to get recording clip sink pad"};
+    }
+
+    const gulong eosProbeId = gst_pad_add_probe(
+        sinkPad,
+        GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        onRecordingSinkEos,
+        &eosContext,
+        nullptr
+    );
+
+    if (eosProbeId == 0) {
+        gst_object_unref(sinkPad);
+        removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+        pipeline.inspectionClipBranches.erase(clipBranch);
+        return RecordingResult{false, "Failed to watch recording clip finalization"};
+    }
+
+    if (pipeline.videoEncodedTee != nullptr && clipBranch->second->teeSrcPad != nullptr) {
+        gst_element_release_request_pad(pipeline.videoEncodedTee, clipBranch->second->teeSrcPad);
+        gst_object_unref(clipBranch->second->teeSrcPad);
+        clipBranch->second->teeSrcPad = nullptr;
+    }
+
+    if (pipeline.audioEncodedTee != nullptr && clipBranch->second->audioTeeSrcPad != nullptr) {
+        gst_element_release_request_pad(pipeline.audioEncodedTee, clipBranch->second->audioTeeSrcPad);
+        gst_object_unref(clipBranch->second->audioTeeSrcPad);
+        clipBranch->second->audioTeeSrcPad = nullptr;
+    }
+
+    if (clipBranch->second->audioActive && clipBranch->second->audioQueue != nullptr) {
+        GstPad* audioQueueSrcPad = gst_element_get_static_pad(clipBranch->second->audioQueue, "src");
+        if (audioQueueSrcPad == nullptr) {
+            gst_pad_remove_probe(sinkPad, eosProbeId);
+            gst_object_unref(sinkPad);
+            removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+            pipeline.inspectionClipBranches.erase(clipBranch);
+            return RecordingResult{false, "Failed to get recording clip audio queue src pad"};
+        }
+
+        if (!gst_pad_push_event(audioQueueSrcPad, gst_event_new_eos())) {
+            gst_object_unref(audioQueueSrcPad);
+            gst_pad_remove_probe(sinkPad, eosProbeId);
+            gst_object_unref(sinkPad);
+            removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+            pipeline.inspectionClipBranches.erase(clipBranch);
+            return RecordingResult{false, "Failed to send EOS to recording clip audio branch"};
+        }
+
+        gst_object_unref(audioQueueSrcPad);
+    }
+
+    GstPad* queueSrcPad = gst_element_get_static_pad(clipBranch->second->queue, "src");
+    if (queueSrcPad == nullptr) {
+        gst_pad_remove_probe(sinkPad, eosProbeId);
+        gst_object_unref(sinkPad);
+        removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+        pipeline.inspectionClipBranches.erase(clipBranch);
+        return RecordingResult{false, "Failed to get recording clip queue src pad"};
+    }
+
+    if (!gst_pad_push_event(queueSrcPad, gst_event_new_eos())) {
+        gst_object_unref(queueSrcPad);
+        gst_pad_remove_probe(sinkPad, eosProbeId);
+        gst_object_unref(sinkPad);
+        removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+        pipeline.inspectionClipBranches.erase(clipBranch);
+        return RecordingResult{false, "Failed to send EOS to recording clip branch"};
+    }
+
+    gst_object_unref(queueSrcPad);
+
+    bool completed = false;
+    {
+        std::unique_lock<std::mutex> lock(eosContext.mutex);
+        completed = eosContext.condition.wait_for(
+            lock,
+            kAvRecordingStopTimeout,
+            [&eosContext]() { return eosContext.done; }
+        );
+    }
+
+    if (!completed) {
+        gst_pad_remove_probe(sinkPad, eosProbeId);
+        gst_object_unref(sinkPad);
+        removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+        pipeline.inspectionClipBranches.erase(clipBranch);
+        return RecordingResult{false, "Timed out waiting for recording clip finalization"};
+    }
+
+    gst_object_unref(sinkPad);
+    removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+    pipeline.inspectionClipBranches.erase(clipBranch);
+    return RecordingResult{true, "Recording clip stopped"};
+}
+
+RecordingResult cancelAvInspectionClip(AvRecordingPipeline& pipeline, int clipId) {
+    if (clipId < 1) {
+        return RecordingResult{false, "clipId must be a positive integer"};
+    }
+
+    const auto clipBranch = pipeline.inspectionClipBranches.find(clipId);
+    if (clipBranch == pipeline.inspectionClipBranches.end()) {
+        return RecordingResult{false, "Clip recording is not running"};
+    }
+
+    removeAvInspectionClipBranch(pipeline, *clipBranch->second);
+    pipeline.inspectionClipBranches.erase(clipBranch);
+    return RecordingResult{true, "Recording clip cancelled"};
+}
+
 void removeAvRecordingPipeline(AvRecordingPipeline& pipeline) {
+    removeAllAvInspectionClipBranches(pipeline);
+
     if (pipeline.audioMixer != nullptr) {
         for (auto& branch : pipeline.audioInputBranches) {
             if (branch.mixerSinkPad != nullptr) {

@@ -3,6 +3,8 @@
 #include <gst/gst.h>
 
 #include <chrono>
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -32,6 +34,26 @@ struct AvRecordingAudioInputBranch {
     bool receivedBuffer = false;
 };
 
+struct AvInspectionClipBranch {
+    int clipId = 0;
+    std::string outputPath;
+    GstElement* queue = nullptr;
+    GstElement* valve = nullptr;
+    GstElement* parser = nullptr;
+    GstElement* muxer = nullptr;
+    GstElement* sink = nullptr;
+    GstPad* teeSrcPad = nullptr;
+    GstElement* audioQueue = nullptr;
+    GstElement* audioValve = nullptr;
+    GstPad* audioTeeSrcPad = nullptr;
+    GstPad* audioMuxerSinkPad = nullptr;
+    bool audioActive = false;
+    bool receivedBuffer = false;
+    bool openedOnKeyframe = false;
+};
+
+using AvInspectionClipBranches = std::map<int, std::unique_ptr<AvInspectionClipBranch>>;
+
 struct AvRecordingPipeline {
     std::string recordingId;
     std::string outputPath;
@@ -49,6 +71,8 @@ struct AvRecordingPipeline {
     GstElement* videoEncoder = nullptr;
     GstElement* videoParser = nullptr;
     GstElement* videoH264CapsFilter = nullptr;
+    GstElement* videoEncodedTee = nullptr;
+    GstElement* videoMasterQueue = nullptr;
     GstElement* videoOutputValve = nullptr;
     GstElement* audioMixer = nullptr;
     GstElement* audioMixerQueue = nullptr;
@@ -56,9 +80,12 @@ struct AvRecordingPipeline {
     GstElement* audioMixerResample = nullptr;
     GstElement* audioMixerCapsFilter = nullptr;
     GstElement* audioEncoder = nullptr;
+    GstElement* audioEncodedTee = nullptr;
+    GstElement* audioMasterQueue = nullptr;
     GstElement* audioOutputValve = nullptr;
     GstElement* muxer = nullptr;
     GstElement* sink = nullptr;
+    AvInspectionClipBranches inspectionClipBranches;
     std::vector<AvRecordingAudioInputBranch> audioInputBranches;
     bool audioActive = false;
     bool receivedVideoBuffer = false;
@@ -78,6 +105,13 @@ struct AvRecordingPipeline {
     AvRecordingPipeline& pipeline
 );
 [[nodiscard]] RecordingResult stopAvRecordingPipeline(AvRecordingPipeline& pipeline);
+[[nodiscard]] RecordingResult startAvInspectionClip(
+    AvRecordingPipeline& pipeline,
+    int clipId,
+    const std::string& outputPath
+);
+[[nodiscard]] RecordingResult stopAvInspectionClip(AvRecordingPipeline& pipeline, int clipId);
+[[nodiscard]] RecordingResult cancelAvInspectionClip(AvRecordingPipeline& pipeline, int clipId);
 void removeAvRecordingPipeline(AvRecordingPipeline& pipeline);
 
 } // namespace travis::media_engine::recording
