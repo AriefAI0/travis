@@ -1,9 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <map>
 #include <string>
 #include <vector>
 
+#include "mediaEngine/recording/pipeline/av_recording_pipeline.h"
 #include "mediaEngine/recording/shared/recording_types.h"
 #include "mediaEngine/session/media_source_session.h"
 
@@ -50,8 +52,10 @@ private:
         travis::media_engine::session::MediaSourceSession*& session
     );
     void removePreparedSource();
+    void removeAvRecordingPipelineContext(const std::string& recordingId);
 
     travis::media_engine::session::MediaSourceSessionManager& sessionManager_;
+    std::map<std::string, std::unique_ptr<AvRecordingPipeline>> avRecordingPipelines_;
     std::unique_ptr<PreparedRecordingSource> preparedSource_;
 };
 

@@ -95,6 +95,7 @@ add_library(travis_media_engine
     src/mediaEngine/pipeline/errors.cpp
     src/mediaEngine/preview/preview_engine.cpp
     src/mediaEngine/recording/recording_engine.cpp
+    src/mediaEngine/recording/pipeline/av_recording_pipeline.cpp
     src/mediaEngine/recording/shared/recording_finalization.cpp
     src/mediaEngine/recording/shared/recording_validation.cpp
     src/mediaEngine/session/media_source_session.cpp

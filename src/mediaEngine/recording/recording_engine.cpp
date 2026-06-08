@@ -1,8 +1,11 @@
 #include "mediaEngine/recording/recording_engine.h"
 
+#include <chrono>
+
+#include "mediaEngine/recording/pipeline/av_recording_pipeline.h"
 #include "mediaEngine/recording/shared/recording_validation.h"
 
-// Provides the first embedded recording-engine lifecycle boundary on top of shared source sessions.
+// Provides the embedded recording-engine lifecycle on top of shared source sessions.
 
 namespace travis::media_engine::recording {
 
@@ -125,16 +128,82 @@ RecordingResult RecordingEngine::startRecording(
         };
     }
 
-    // The heavy AV pipeline port is intentionally added in the next slice on top of this boundary.
+    removeAvRecordingPipelineContext(recordingId);
+
+    std::vector<AvRecordingVideoInput> avVideoInputs;
+    std::vector<travis::media_engine::session::MediaSourceSession*> sourceSessions;
+    avVideoInputs.reserve(videoInputs.size());
+    sourceSessions.reserve(videoInputs.size());
+
+    for (const auto& videoInput : videoInputs) {
+        travis::media_engine::session::MediaSourceSession* session = nullptr;
+        const auto sessionResult = acquireRecordingSourceSession(
+            videoInput.sourceKind,
+            videoInput.sourceName,
+            videoInput.urlAddress,
+            videoInput.devicePath,
+            videoInput.sourceElement,
+            session
+        );
+
+        if (!sessionResult.ok || session == nullptr) {
+            for (auto* sourceSession : sourceSessions) {
+                if (sourceSession != nullptr) {
+                    sessionManager_.releaseSession(*sourceSession);
+                }
+            }
+            return RecordingResult{false, sessionResult.message};
+        }
+
+        const auto bridgeResult = sessionManager_.ensureRecordingBridge(*session);
+        if (!bridgeResult.ok) {
+            sessionManager_.releaseSession(*session);
+            for (auto* sourceSession : sourceSessions) {
+                if (sourceSession != nullptr) {
+                    sessionManager_.releaseSession(*sourceSession);
+                }
+            }
+            return RecordingResult{false, bridgeResult.message};
+        }
+
+        sourceSessions.push_back(session);
+        avVideoInputs.push_back(AvRecordingVideoInput{
+            .sourceKind = videoInput.sourceKind,
+            .sourceName = videoInput.sourceName,
+            .sourceElement = videoInput.sourceElement,
+            .bridgeChannel = session->recordingBridgeChannel,
+            .width = videoInput.width,
+            .height = videoInput.height,
+        });
+    }
+
+    auto pipeline = std::make_unique<AvRecordingPipeline>();
+    const auto startResult = startAvRecordingPipeline(
+        recordingId,
+        avVideoInputs,
+        audioInputs,
+        outputPath,
+        &sessionManager_,
+        sourceSessions,
+        *pipeline
+    );
+
+    if (!startResult.ok) {
+        for (auto* sourceSession : sourceSessions) {
+            if (sourceSession != nullptr) {
+                sessionManager_.releaseSession(*sourceSession);
+            }
+        }
+        return startResult;
+    }
+
+    avRecordingPipelines_[recordingId] = std::move(pipeline);
+    (void)sourceKind;
+    (void)sourceName;
     (void)urlAddress;
     (void)devicePath;
     (void)sourceElement;
-    (void)videoInputs;
-
-    return RecordingResult{
-        false,
-        "Recording pipeline implementation is not wired yet",
-    };
+    return startResult;
 }
 
 RecordingResult RecordingEngine::stopRecording(const std::string& recordingId) {
@@ -142,7 +211,14 @@ RecordingResult RecordingEngine::stopRecording(const std::string& recordingId) {
         return RecordingResult{false, "recordingId is required"};
     }
 
-    return RecordingResult{false, "Recording pipeline implementation is not wired yet"};
+    const auto avPipeline = avRecordingPipelines_.find(recordingId);
+    if (avPipeline != avRecordingPipelines_.end()) {
+        const auto finalizeResult = stopAvRecordingPipeline(*avPipeline->second);
+        avRecordingPipelines_.erase(avPipeline);
+        return finalizeResult;
+    }
+
+    return RecordingResult{false, "Recording is not running"};
 }
 
 RecordingPositionResult RecordingEngine::getRecordingPosition(const std::string& recordingId) const {
@@ -150,19 +226,40 @@ RecordingPositionResult RecordingEngine::getRecordingPosition(const std::string&
         return RecordingPositionResult{false, "recordingId is required", 0};
     }
 
-    return RecordingPositionResult{
-        false,
-        "Recording pipeline implementation is not wired yet",
-        0,
-    };
+    const auto avPipeline = avRecordingPipelines_.find(recordingId);
+    if (avPipeline != avRecordingPipelines_.end()) {
+        const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                   std::chrono::steady_clock::now() - avPipeline->second->startedAt
+                               )
+                                   .count();
+        return RecordingPositionResult{true, "Recording position estimated", elapsedMs};
+    }
+
+    return RecordingPositionResult{false, "Recording is not running", 0};
 }
 
 std::vector<std::string> RecordingEngine::listActiveRecordings() const {
-    return {};
+    std::vector<std::string> recordingIds;
+    recordingIds.reserve(avRecordingPipelines_.size());
+
+    for (const auto& [recordingId, _] : avRecordingPipelines_) {
+        recordingIds.push_back(recordingId);
+    }
+
+    return recordingIds;
 }
 
 RecordingResult RecordingEngine::stopAllRecordings() {
-    return RecordingResult{true, "No active recordings to stop"};
+    for (const auto& [_, pipeline] : avRecordingPipelines_) {
+        const auto finalizeResult = stopAvRecordingPipeline(*pipeline);
+        if (!finalizeResult.ok) {
+            return finalizeResult;
+        }
+    }
+
+    avRecordingPipelines_.clear();
+    removePreparedSource();
+    return RecordingResult{true, "All recordings stopped"};
 }
 
 void RecordingEngine::removePreparedSource() {
@@ -172,6 +269,17 @@ void RecordingEngine::removePreparedSource() {
 
     sessionManager_.releaseSession(*preparedSource_->session);
     preparedSource_.reset();
+}
+
+void RecordingEngine::removeAvRecordingPipelineContext(const std::string& recordingId) {
+    const auto pipeline = avRecordingPipelines_.find(recordingId);
+
+    if (pipeline == avRecordingPipelines_.end()) {
+        return;
+    }
+
+    removeAvRecordingPipeline(*pipeline->second);
+    avRecordingPipelines_.erase(pipeline);
 }
 
 } // namespace travis::media_engine::recording
