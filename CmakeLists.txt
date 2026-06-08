@@ -10,6 +10,10 @@ include(CTest)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml Sql Test)
 
+qt_standard_project_setup()
+qt_policy(SET QTP0001 NEW)
+qt_policy(SET QTP0004 NEW)
+
 set(TRAVIS_GSTREAMER_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/runtime/gstreamer/1.0/msvc_x86_64)
 
 add_library(travis_data_database
