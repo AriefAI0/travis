@@ -25,6 +25,9 @@ void AppContextTest::initialize_buildsServiceGraph() {
     (void)appContext.resultMediaService();
     (void)appContext.videoService();
     (void)appContext.inspectionClipService();
+    (void)appContext.recordingWorkflowService();
+    (void)appContext.playbackWorkflowService();
+    (void)appContext.recordingRecoveryService();
 
     QVERIFY(true);
 }

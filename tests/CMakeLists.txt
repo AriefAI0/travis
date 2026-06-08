@@ -1,5 +1,10 @@
 # Central test entrypoint. Individual test targets are grouped here by area.
 
+set(TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../runtime/gstreamer/1.0/msvc_x86_64")
+set(TRAVIS_GSTREAMER_TEST_BIN_DIR "${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}/bin")
+set(TRAVIS_GSTREAMER_TEST_PLUGIN_DIR "${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}/lib/gstreamer-1.0")
+set(TRAVIS_GSTREAMER_TEST_RUNNER "${CMAKE_CURRENT_SOURCE_DIR}/support/run_with_gstreamer_runtime.cmake")
+
 add_executable(project_service_test
     services/project_service_test.cpp
     support/sqlite_test_helper.cpp
@@ -37,6 +42,20 @@ add_executable(inspection_clip_service_test
 
 add_executable(app_context_test
     app/app_context_test.cpp
+)
+
+add_executable(media_runtime_test
+    media/media_runtime_test.cpp
+)
+
+add_executable(playback_workflow_test
+    media/playback_workflow_test.cpp
+    support/sqlite_test_helper.cpp
+)
+
+add_executable(recording_recovery_service_test
+    media/recording_recovery_service_test.cpp
+    support/sqlite_test_helper.cpp
 )
 
 target_include_directories(project_service_test
@@ -163,8 +182,55 @@ target_link_libraries(app_context_test
         Qt6::Core
         Qt6::Sql
         Qt6::Test
+        travis_application
+)
+
+target_include_directories(media_runtime_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(media_runtime_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Test
+        travis_media_engine
+)
+
+target_include_directories(playback_workflow_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(playback_workflow_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Sql
+        Qt6::Test
         travis_data_database
         travis_services
+        travis_application
+)
+
+target_include_directories(recording_recovery_service_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(recording_recovery_service_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Sql
+        Qt6::Test
+        travis_data_database
+        travis_services
+        travis_application
 )
 
 add_test(NAME project_service_test COMMAND project_service_test)
@@ -174,4 +240,21 @@ add_test(NAME execution_service_test COMMAND execution_service_test)
 add_test(NAME result_service_test COMMAND result_service_test)
 add_test(NAME video_service_test COMMAND video_service_test)
 add_test(NAME inspection_clip_service_test COMMAND inspection_clip_service_test)
-add_test(NAME app_context_test COMMAND app_context_test)
+add_test(
+    NAME media_runtime_test
+    COMMAND
+        ${CMAKE_COMMAND}
+            -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:media_runtime_test>
+            -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
+)
+add_test(
+    NAME app_context_test
+    COMMAND
+        ${CMAKE_COMMAND}
+            -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:app_context_test>
+            -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
+)
+add_test(NAME playback_workflow_test COMMAND playback_workflow_test)
+add_test(NAME recording_recovery_service_test COMMAND recording_recovery_service_test)

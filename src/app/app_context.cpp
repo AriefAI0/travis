@@ -43,6 +43,9 @@ bool AppContext::initialize() {
         *structureService_,
         *executionService_
     );
+    recordingWorkflowService_.emplace(*sessionService_, *videoService_, *inspectionClipService_);
+    playbackWorkflowService_.emplace(*videoService_, *resultMediaService_);
+    recordingRecoveryService_.emplace(*videoService_, *inspectionClipService_, *resultService_);
 
     lastError_.clear();
     return true;
@@ -84,6 +87,18 @@ travis::services::InspectionClipService& AppContext::inspectionClipService() {
     return *inspectionClipService_;
 }
 
+travis::application::recording::RecordingWorkflowService& AppContext::recordingWorkflowService() {
+    return *recordingWorkflowService_;
+}
+
+travis::application::playback::PlaybackWorkflowService& AppContext::playbackWorkflowService() {
+    return *playbackWorkflowService_;
+}
+
+travis::application::recovery::RecordingRecoveryService& AppContext::recordingRecoveryService() {
+    return *recordingRecoveryService_;
+}
+
 const travis::services::ProjectService& AppContext::projectService() const {
     return *projectService_;
 }
@@ -114,6 +129,18 @@ const travis::services::VideoService& AppContext::videoService() const {
 
 const travis::services::InspectionClipService& AppContext::inspectionClipService() const {
     return *inspectionClipService_;
+}
+
+const travis::application::recording::RecordingWorkflowService& AppContext::recordingWorkflowService() const {
+    return *recordingWorkflowService_;
+}
+
+const travis::application::playback::PlaybackWorkflowService& AppContext::playbackWorkflowService() const {
+    return *playbackWorkflowService_;
+}
+
+const travis::application::recovery::RecordingRecoveryService& AppContext::recordingRecoveryService() const {
+    return *recordingRecoveryService_;
 }
 
 } // namespace travis::app

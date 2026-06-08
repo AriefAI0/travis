@@ -1,0 +1,20 @@
+if(NOT DEFINED TRAVIS_TEST_EXECUTABLE)
+    message(FATAL_ERROR "TRAVIS_TEST_EXECUTABLE is required")
+endif()
+
+if(NOT DEFINED TRAVIS_GSTREAMER_RUNTIME_ROOT)
+    message(FATAL_ERROR "TRAVIS_GSTREAMER_RUNTIME_ROOT is required")
+endif()
+
+set(ENV{PATH} "${TRAVIS_GSTREAMER_RUNTIME_ROOT}/bin;$ENV{PATH}")
+set(ENV{GST_PLUGIN_PATH_1_0} "${TRAVIS_GSTREAMER_RUNTIME_ROOT}/lib/gstreamer-1.0")
+set(ENV{GST_PLUGIN_SYSTEM_PATH_1_0} "${TRAVIS_GSTREAMER_RUNTIME_ROOT}/lib/gstreamer-1.0")
+
+execute_process(
+    COMMAND "${TRAVIS_TEST_EXECUTABLE}"
+    RESULT_VARIABLE test_result
+)
+
+if(NOT test_result EQUAL 0)
+    message(FATAL_ERROR "Test exited with code ${test_result}")
+endif()
