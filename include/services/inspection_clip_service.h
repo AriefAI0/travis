@@ -53,7 +53,9 @@ struct StopInspectionClipInput {
 
 class InspectionClipService {
 public:
+    // Returns the status value used for in-progress inspection results.
     static QString inProgressStatus();
+    // Returns the status value used for completed inspection results.
     static QString completedStatus();
 
     InspectionClipService(
@@ -64,15 +66,20 @@ public:
         ExecutionService executionService
     );
 
+    // Returns the active inspection clip lifecycle for one session-item and inspection type.
     std::optional<InspectionClipLifecycle> getActiveInspectionClip(
         qint64 sessionItemId,
         qint64 inspectionTypeId
     ) const;
+    // Starts a new inspection result plus an active recording clip.
     InspectionClipLifecycle startInspectionClip(const StartInspectionClipInput& input) const;
+    // Starts a clip by resolving session-item and execution-unit dependencies first.
     InspectionClipLifecycle startInspectionClipFromRecording(
         const StartRecordingInspectionClipInput& input
     ) const;
+    // Completes the current clip and marks the linked result as completed.
     std::optional<InspectionClipLifecycle> stopInspectionClip(const StopInspectionClipInput& input) const;
+    // Cancels an active clip and removes its linked result.
     std::optional<InspectionClipLifecycle> cancelInspectionClip(qint64 clipId) const;
 
 private:

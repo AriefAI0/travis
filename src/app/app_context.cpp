@@ -24,6 +24,7 @@ AppContext::AppContext()
     , structureService_(assetRepository_, componentRepository_, itemRepository_)
     , executionService_(executionUnitRepository_, toolingRepository_)
     , resultService_(inspectionTypeRepository_, resultRepository_, resultImageRepository_)
+    , resultMediaService_(resultImageRepository_)
     , videoService_(masterVideoRepository_, videoClipRepository_, timelineThumbnailRepository_)
     , inspectionClipService_(
         resultService_,
@@ -67,6 +68,10 @@ travis::services::ResultService& AppContext::resultService() {
     return resultService_;
 }
 
+travis::services::ResultMediaService& AppContext::resultMediaService() {
+    return resultMediaService_;
+}
+
 travis::services::VideoService& AppContext::videoService() {
     return videoService_;
 }
@@ -93,6 +98,10 @@ const travis::services::ExecutionService& AppContext::executionService() const {
 
 const travis::services::ResultService& AppContext::resultService() const {
     return resultService_;
+}
+
+const travis::services::ResultMediaService& AppContext::resultMediaService() const {
+    return resultMediaService_;
 }
 
 const travis::services::VideoService& AppContext::videoService() const {

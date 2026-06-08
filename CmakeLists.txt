@@ -45,6 +45,7 @@ add_library(travis_services
     src/services/execution_service.cpp
     src/services/inspection_clip_service.cpp
     src/services/project_service.cpp
+    src/services/result_media_service.cpp
     src/services/result_service.cpp
     src/services/session_service.cpp
     src/services/structure_service.cpp
