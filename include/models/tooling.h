@@ -25,7 +25,7 @@ struct ToolingCreateInput {
 struct ToolingUpdateInput {
     std::optional<qint64> executionUnitId;
     std::optional<QString> name;
-    std::optional<QString> config;
+    std::optional<std::optional<QString>> config;
 };
 
 } // namespace travis::models

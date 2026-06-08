@@ -1,5 +1,7 @@
 #include <QtTest>
 
+#include <QSqlQuery>
+
 #include "data/repositories/asset_repository.h"
 #include "data/repositories/component_repository.h"
 #include "data/repositories/execution_unit_repository.h"
@@ -67,29 +69,29 @@ void InspectionClipServiceTest::cleanup() {
 }
 
 void InspectionClipServiceTest::startInspectionClip_createsLifecycle() {
-    travis::services::SessionService sessionService(
+    travis::services::SessionService sessionService{
         travis::data::repositories::SessionRepository(database_),
         travis::data::repositories::SessionItemRepository(database_)
-    );
-    travis::services::StructureService structureService(
+    };
+    travis::services::StructureService structureService{
         travis::data::repositories::AssetRepository(database_),
         travis::data::repositories::ComponentRepository(database_),
         travis::data::repositories::ItemRepository(database_)
-    );
-    travis::services::ExecutionService executionService(
+    };
+    travis::services::ExecutionService executionService{
         travis::data::repositories::ExecutionUnitRepository(database_),
         travis::data::repositories::ToolingRepository(database_)
-    );
-    travis::services::ResultService resultService(
+    };
+    travis::services::ResultService resultService{
         travis::data::repositories::InspectionTypeRepository(database_),
         travis::data::repositories::ResultRepository(database_),
         travis::data::repositories::ResultImageRepository(database_)
-    );
-    travis::services::VideoService videoService(
+    };
+    travis::services::VideoService videoService{
         travis::data::repositories::MasterVideoRepository(database_),
         travis::data::repositories::VideoClipRepository(database_),
         travis::data::repositories::TimelineThumbnailRepository(database_)
-    );
+    };
     travis::services::InspectionClipService service(
         resultService,
         videoService,
@@ -117,29 +119,29 @@ void InspectionClipServiceTest::startInspectionClip_createsLifecycle() {
 }
 
 void InspectionClipServiceTest::stopInspectionClip_completesLifecycle() {
-    travis::services::SessionService sessionService(
+    travis::services::SessionService sessionService{
         travis::data::repositories::SessionRepository(database_),
         travis::data::repositories::SessionItemRepository(database_)
-    );
-    travis::services::StructureService structureService(
+    };
+    travis::services::StructureService structureService{
         travis::data::repositories::AssetRepository(database_),
         travis::data::repositories::ComponentRepository(database_),
         travis::data::repositories::ItemRepository(database_)
-    );
-    travis::services::ExecutionService executionService(
+    };
+    travis::services::ExecutionService executionService{
         travis::data::repositories::ExecutionUnitRepository(database_),
         travis::data::repositories::ToolingRepository(database_)
-    );
-    travis::services::ResultService resultService(
+    };
+    travis::services::ResultService resultService{
         travis::data::repositories::InspectionTypeRepository(database_),
         travis::data::repositories::ResultRepository(database_),
         travis::data::repositories::ResultImageRepository(database_)
-    );
-    travis::services::VideoService videoService(
+    };
+    travis::services::VideoService videoService{
         travis::data::repositories::MasterVideoRepository(database_),
         travis::data::repositories::VideoClipRepository(database_),
         travis::data::repositories::TimelineThumbnailRepository(database_)
-    );
+    };
     travis::services::InspectionClipService service(
         resultService,
         videoService,
@@ -175,29 +177,29 @@ void InspectionClipServiceTest::stopInspectionClip_completesLifecycle() {
 }
 
 void InspectionClipServiceTest::cancelInspectionClip_removesLifecycle() {
-    travis::services::SessionService sessionService(
+    travis::services::SessionService sessionService{
         travis::data::repositories::SessionRepository(database_),
         travis::data::repositories::SessionItemRepository(database_)
-    );
-    travis::services::StructureService structureService(
+    };
+    travis::services::StructureService structureService{
         travis::data::repositories::AssetRepository(database_),
         travis::data::repositories::ComponentRepository(database_),
         travis::data::repositories::ItemRepository(database_)
-    );
-    travis::services::ExecutionService executionService(
+    };
+    travis::services::ExecutionService executionService{
         travis::data::repositories::ExecutionUnitRepository(database_),
         travis::data::repositories::ToolingRepository(database_)
-    );
-    travis::services::ResultService resultService(
+    };
+    travis::services::ResultService resultService{
         travis::data::repositories::InspectionTypeRepository(database_),
         travis::data::repositories::ResultRepository(database_),
         travis::data::repositories::ResultImageRepository(database_)
-    );
-    travis::services::VideoService videoService(
+    };
+    travis::services::VideoService videoService{
         travis::data::repositories::MasterVideoRepository(database_),
         travis::data::repositories::VideoClipRepository(database_),
         travis::data::repositories::TimelineThumbnailRepository(database_)
-    );
+    };
     travis::services::InspectionClipService service(
         resultService,
         videoService,
@@ -227,6 +229,6 @@ void InspectionClipServiceTest::cancelInspectionClip_removesLifecycle() {
 
 } // namespace
 
-QTEST_APPLESS_MAIN(InspectionClipServiceTest)
+QTEST_GUILESS_MAIN(InspectionClipServiceTest)
 
 #include "inspection_clip_service_test.moc"

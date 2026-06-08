@@ -25,8 +25,8 @@ struct ProjectCreateInput {
 
 struct ProjectUpdateInput {
     std::optional<QString> title;
-    std::optional<QString> description;
-    std::optional<QString> documentId;
+    std::optional<std::optional<QString>> description;
+    std::optional<std::optional<QString>> documentId;
 };
 
 } // namespace travis::models

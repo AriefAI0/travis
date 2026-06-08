@@ -70,7 +70,7 @@ std::optional<travis::models::Session> SessionService::updateSession(
     }
 
     if (input.name.has_value()) {
-        normalizedInput.name = normalizeOptionalText(input.name);
+        normalizedInput.name = normalizeOptionalText(*input.name);
     }
 
     return sessionRepository_.updateById(sessionId, normalizedInput);

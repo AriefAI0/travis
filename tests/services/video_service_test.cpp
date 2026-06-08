@@ -1,5 +1,7 @@
 #include <QtTest>
 
+#include <QSqlQuery>
+
 #include "data/repositories/master_video_repository.h"
 #include "data/repositories/timeline_thumbnail_repository.h"
 #include "data/repositories/video_clip_repository.h"
@@ -194,6 +196,6 @@ void VideoServiceTest::replaceMasterVideoTimelineThumbnails_rewritesThumbnailSet
 
 } // namespace
 
-QTEST_APPLESS_MAIN(VideoServiceTest)
+QTEST_GUILESS_MAIN(VideoServiceTest)
 
 #include "video_service_test.moc"

@@ -25,7 +25,7 @@ struct ExecutionUnitCreateInput {
 struct ExecutionUnitUpdateInput {
     std::optional<QString> type;
     std::optional<QString> name;
-    std::optional<QString> meta;
+    std::optional<std::optional<QString>> meta;
 };
 
 } // namespace travis::models

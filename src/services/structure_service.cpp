@@ -165,11 +165,11 @@ std::optional<travis::models::Item> StructureService::updateItem(
     }
 
     if (input.position.has_value()) {
-        normalizedInput.position = normalizeOptionalText(input.position);
+        normalizedInput.position = normalizeOptionalText(*input.position);
     }
 
     if (input.status.has_value()) {
-        normalizedInput.status = input.status;
+        normalizedInput.status = *input.status;
     }
 
     return itemRepository_.updateById(itemId, normalizedInput);

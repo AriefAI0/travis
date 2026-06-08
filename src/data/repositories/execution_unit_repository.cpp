@@ -153,7 +153,10 @@ std::optional<ExecutionUnit> ExecutionUnitRepository::updateById(
     )");
     query.bindValue(":type", input.type.value_or(executionUnit.type));
     query.bindValue(":name", input.name.value_or(executionUnit.name));
-    query.bindValue(":meta", input.meta ? toNullableString(input.meta) : toNullableString(executionUnit.meta));
+    query.bindValue(
+        ":meta",
+        input.meta.has_value() ? toNullableString(*input.meta) : toNullableString(executionUnit.meta)
+    );
     query.bindValue(":execution_unit_id", executionUnitId);
 
     if (!query.exec()) {

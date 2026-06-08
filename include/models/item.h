@@ -26,8 +26,8 @@ struct ItemCreateInput {
 struct ItemUpdateInput {
     std::optional<qint64> componentId;
     std::optional<QString> itemLabel;
-    std::optional<QString> position;
-    std::optional<qint64> status;
+    std::optional<std::optional<QString>> position;
+    std::optional<std::optional<qint64>> status;
 };
 
 } // namespace travis::models

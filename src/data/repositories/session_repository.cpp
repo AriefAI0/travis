@@ -149,7 +149,12 @@ std::optional<Session> SessionRepository::updateById(qint64 sessionId, const Ses
         WHERE session_id = :session_id
     )");
     query.bindValue(":project_id", input.projectId.value_or(session.projectId));
-    query.bindValue(":name", input.name ? QVariant(*input.name) : (session.name ? QVariant(*session.name) : QVariant(QVariant::String)));
+    query.bindValue(
+        ":name",
+        input.name.has_value()
+            ? (input.name->has_value() ? QVariant(**input.name) : QVariant(QMetaType::fromType<QString>()))
+            : (session.name ? QVariant(*session.name) : QVariant(QMetaType::fromType<QString>()))
+    );
     query.bindValue(":updated_at", currentEpochSeconds());
     query.bindValue(":session_id", sessionId);
 

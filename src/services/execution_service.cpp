@@ -84,7 +84,7 @@ std::optional<travis::models::ExecutionUnit> ExecutionService::updateExecutionUn
     }
 
     if (input.meta.has_value()) {
-        normalizedInput.meta = normalizeOptionalText(input.meta);
+        normalizedInput.meta = normalizeOptionalText(*input.meta);
     }
 
     return executionUnitRepository_.updateById(executionUnitId, normalizedInput);
@@ -141,7 +141,7 @@ std::optional<travis::models::Tooling> ExecutionService::updateTooling(
     }
 
     if (input.config.has_value()) {
-        normalizedInput.config = normalizeOptionalText(input.config);
+        normalizedInput.config = normalizeOptionalText(*input.config);
     }
 
     return toolingRepository_.updateById(toolingId, normalizedInput);

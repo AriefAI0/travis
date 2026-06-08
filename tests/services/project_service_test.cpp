@@ -101,6 +101,6 @@ void ProjectServiceTest::updateProject_normalizesOptionalFields() {
 
 } // namespace
 
-QTEST_APPLESS_MAIN(ProjectServiceTest)
+QTEST_GUILESS_MAIN(ProjectServiceTest)
 
 #include "project_service_test.moc"

@@ -1,5 +1,7 @@
 #include <QtTest>
 
+#include <QSqlQuery>
+
 #include "data/repositories/asset_repository.h"
 #include "data/repositories/component_repository.h"
 #include "data/repositories/item_repository.h"
@@ -139,6 +141,6 @@ void StructureServiceTest::listProjectStructureTree_returnsNestedNodes() {
 
 } // namespace
 
-QTEST_APPLESS_MAIN(StructureServiceTest)
+QTEST_GUILESS_MAIN(StructureServiceTest)
 
 #include "structure_service_test.moc"

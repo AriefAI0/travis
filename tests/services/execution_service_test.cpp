@@ -1,5 +1,7 @@
 #include <QtTest>
 
+#include <QSqlQuery>
+
 #include "data/repositories/execution_unit_repository.h"
 #include "data/repositories/tooling_repository.h"
 #include "services/execution_service.h"
@@ -120,6 +122,6 @@ void ExecutionServiceTest::toolingLifecycle_persistsNormalizedFields() {
 
 } // namespace
 
-QTEST_APPLESS_MAIN(ExecutionServiceTest)
+QTEST_GUILESS_MAIN(ExecutionServiceTest)
 
 #include "execution_service_test.moc"

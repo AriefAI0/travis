@@ -150,7 +150,10 @@ std::optional<Tooling> ToolingRepository::updateById(qint64 toolingId, const Too
     )");
     query.bindValue(":execution_unit_id", input.executionUnitId.value_or(tooling.executionUnitId));
     query.bindValue(":name", input.name.value_or(tooling.name));
-    query.bindValue(":config", input.config ? toNullableString(input.config) : toNullableString(tooling.config));
+    query.bindValue(
+        ":config",
+        input.config.has_value() ? toNullableString(*input.config) : toNullableString(tooling.config)
+    );
     query.bindValue(":tooling_id", toolingId);
 
     if (!query.exec()) {

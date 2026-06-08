@@ -1,5 +1,7 @@
 #include <QtTest>
 
+#include <QSqlQuery>
+
 #include "data/repositories/inspection_type_repository.h"
 #include "data/repositories/result_image_repository.h"
 #include "data/repositories/result_repository.h"
@@ -147,6 +149,6 @@ void ResultServiceTest::resultImageSummaries_returnProjectedRows() {
 
 } // namespace
 
-QTEST_APPLESS_MAIN(ResultServiceTest)
+QTEST_GUILESS_MAIN(ResultServiceTest)
 
 #include "result_service_test.moc"

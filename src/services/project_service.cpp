@@ -62,11 +62,11 @@ std::optional<travis::models::Project> ProjectService::updateProject(
     }
 
     if (input.description.has_value()) {
-        normalizedInput.description = normalizeOptionalText(input.description);
+        normalizedInput.description = normalizeOptionalText(*input.description);
     }
 
     if (input.documentId.has_value()) {
-        normalizedInput.documentId = normalizeOptionalText(input.documentId);
+        normalizedInput.documentId = normalizeOptionalText(*input.documentId);
     }
 
     return projectRepository_.updateById(projectId, normalizedInput);

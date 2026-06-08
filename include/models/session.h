@@ -23,7 +23,7 @@ struct SessionCreateInput {
 
 struct SessionUpdateInput {
     std::optional<qint64> projectId;
-    std::optional<QString> name;
+    std::optional<std::optional<QString>> name;
 };
 
 } // namespace travis::models

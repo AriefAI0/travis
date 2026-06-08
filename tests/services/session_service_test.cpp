@@ -1,5 +1,7 @@
 #include <QtTest>
 
+#include <QSqlQuery>
+
 #include "data/repositories/session_item_repository.h"
 #include "data/repositories/session_repository.h"
 #include "services/session_service.h"
@@ -122,6 +124,6 @@ void SessionServiceTest::sessionItem_crudFlow() {
 
 } // namespace
 
-QTEST_APPLESS_MAIN(SessionServiceTest)
+QTEST_GUILESS_MAIN(SessionServiceTest)
 
 #include "session_service_test.moc"

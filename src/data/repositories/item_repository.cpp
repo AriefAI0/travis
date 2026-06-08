@@ -164,8 +164,14 @@ std::optional<Item> ItemRepository::updateById(qint64 itemId, const ItemUpdateIn
     )");
     query.bindValue(":component_id", input.componentId.value_or(item.componentId));
     query.bindValue(":item_label", input.itemLabel.value_or(item.itemLabel));
-    query.bindValue(":position", input.position ? toNullableString(input.position) : toNullableString(item.position));
-    query.bindValue(":status", input.status ? toNullableInteger(input.status) : toNullableInteger(item.status));
+    query.bindValue(
+        ":position",
+        input.position.has_value() ? toNullableString(*input.position) : toNullableString(item.position)
+    );
+    query.bindValue(
+        ":status",
+        input.status.has_value() ? toNullableInteger(*input.status) : toNullableInteger(item.status)
+    );
     query.bindValue(":item_id", itemId);
 
     if (!query.exec()) {

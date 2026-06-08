@@ -41,6 +41,7 @@ add_executable(app_context_test
 
 target_include_directories(project_service_test
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/..
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
@@ -56,6 +57,7 @@ target_link_libraries(project_service_test
 
 target_include_directories(session_service_test
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/..
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
@@ -71,6 +73,7 @@ target_link_libraries(session_service_test
 
 target_include_directories(structure_service_test
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/..
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
@@ -86,6 +89,7 @@ target_link_libraries(structure_service_test
 
 target_include_directories(execution_service_test
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/..
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
@@ -101,6 +105,7 @@ target_link_libraries(execution_service_test
 
 target_include_directories(result_service_test
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/..
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
@@ -116,6 +121,7 @@ target_link_libraries(result_service_test
 
 target_include_directories(video_service_test
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/..
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
@@ -131,6 +137,7 @@ target_link_libraries(video_service_test
 
 target_include_directories(inspection_clip_service_test
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/..
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
@@ -146,6 +153,7 @@ target_link_libraries(inspection_clip_service_test
 
 target_include_directories(app_context_test
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/..
         ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )

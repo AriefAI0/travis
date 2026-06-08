@@ -113,8 +113,18 @@ std::optional<Project> ProjectRepository::updateById(qint64 projectId, const Pro
         WHERE project_id = :project_id
     )");
     query.bindValue(":title", input.title.value_or(project.title));
-    query.bindValue(":description", input.description ? QVariant(*input.description) : (project.description ? QVariant(*project.description) : QVariant(QVariant::String)));
-    query.bindValue(":document_id", input.documentId ? QVariant(*input.documentId) : (project.documentId ? QVariant(*project.documentId) : QVariant(QVariant::String)));
+    query.bindValue(
+        ":description",
+        input.description.has_value()
+            ? (input.description->has_value() ? QVariant(**input.description) : QVariant(QMetaType::fromType<QString>()))
+            : (project.description ? QVariant(*project.description) : QVariant(QMetaType::fromType<QString>()))
+    );
+    query.bindValue(
+        ":document_id",
+        input.documentId.has_value()
+            ? (input.documentId->has_value() ? QVariant(**input.documentId) : QVariant(QMetaType::fromType<QString>()))
+            : (project.documentId ? QVariant(*project.documentId) : QVariant(QMetaType::fromType<QString>()))
+    );
     query.bindValue(":updated_at", currentEpochSeconds());
     query.bindValue(":project_id", projectId);
 
