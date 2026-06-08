@@ -1,70 +1,53 @@
 # Test CLI Commands
 
-This project uses:
-
-- `Qt Test` for writing tests
-- `CTest` for running registered test executables
-- `CMake + Ninja + MinGW` for the current local build setup
-
-Run all commands from:
+Run all commands from the project root:
 
 ```text
 travis/
 ```
 
-Do not run these commands from `tests/`.
+Do not run test commands inside `tests/`.
 
-## 1. Configure the build
+## Normal commands you will usually use
+
+### 1. Configure once
 
 ```powershell
 cmake --preset mingw-debug
 ```
 
-What it does:
+Use this:
+- first time only
+- or after changing `CMakeLists.txt`
+- or after changing `CMakePresets.json`
 
-- creates the build folder: `build/mingw-debug`
-- configures the project with the Qt MinGW kit
-- enables the test targets under `tests/`
-
-You usually run this once first, or again after changing CMake files.
-
-## 2. Build the project and all tests
+### 2. Build
 
 ```powershell
 cmake --build --preset mingw-debug
 ```
 
-What it does:
-
-- builds app libraries
-- builds all test executables too
-
 Use this after code changes.
 
-## 3. Run all tests
+### 3. Run all tests
 
 ```powershell
 ctest --preset mingw-debug
 ```
 
-What it does:
+## Standard daily flow
 
-- runs every registered Qt test
-- prints failure details directly in terminal
-
-Yes, normally you run both:
+Usually you run these two:
 
 1. build
 2. test
 
-Example normal flow:
-
 ```powershell
 cmake --build --preset mingw-debug
 ctest --preset mingw-debug
 ```
 
-## 4. Run one test only
+## Run one test only
 
 Example:
 
@@ -72,7 +55,7 @@ Example:
 ctest --test-dir build/mingw-debug -R project_service_test --output-on-failure
 ```
 
-You can replace `project_service_test` with:
+Replace `project_service_test` with:
 
 - `session_service_test`
 - `structure_service_test`
@@ -82,18 +65,29 @@ You can replace `project_service_test` with:
 - `inspection_clip_service_test`
 - `app_context_test`
 
-## 5. Rebuild after code changes
+## If build files do not exist yet
+
+```powershell
+cmake --preset mingw-debug
+cmake --build --preset mingw-debug
+ctest --preset mingw-debug
+```
+
+## Simple rule
+
+- run everything from project root
+- do not go into `tests/`
+- normal command for daily use:
 
 ```powershell
 cmake --build --preset mingw-debug
 ctest --preset mingw-debug
 ```
 
-## Important
+## Current preset
 
-This preset currently uses:
+This project currently uses:
 
+- preset name: `mingw-debug`
 - Qt path: `C:/Qt/6.8.3/mingw_64`
 - generator: `Ninja`
-
-Do not use the Visual Studio generator with this Qt install, because this Qt package is the MinGW build.

@@ -13,7 +13,6 @@
       "binaryDir": "${sourceDir}/build/mingw-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        // Set the CMAKE_PREFIX_PATH to the Qt installation directory to help CMake find the Qt libraries and tools
         "CMAKE_PREFIX_PATH": "C:/Qt/6.8.3/mingw_64"
       }
     }
