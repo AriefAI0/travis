@@ -17,6 +17,23 @@ constexpr gint64 kWasapiLatencyTime = 5000;
 constexpr gint64 kWasapiBufferTime = 20000;
 constexpr int kRecordingVideoWidth = 1920;
 constexpr int kRecordingVideoHeight = 1080;
+constexpr const char* kPreferredRecordingVideoEncoders[] = {
+    "qsvh264enc",
+    "mfh264enc",
+    "x264enc",
+};
+
+GstElement* createRecordingVideoEncoder(std::string& encoderName) {
+    for (const char* candidate : kPreferredRecordingVideoEncoders) {
+        if (GstElement* encoder = gst_element_factory_make(candidate, nullptr); encoder != nullptr) {
+            encoderName = candidate;
+            return encoder;
+        }
+    }
+
+    encoderName.clear();
+    return nullptr;
+}
 
 std::string resolveAudioSourceElement(const RecordingAudioInput& audioInput) {
     return audioInput.sourceElement.empty() ? "wasapi2src" : audioInput.sourceElement;
@@ -143,13 +160,15 @@ RecordingResult prepareVideoPath(
     }
 
     const auto& videoInput = videoInputs.front();
+    std::string encoderName;
     pipeline.videoSource = gst_element_factory_make("intervideosrc", nullptr);
     pipeline.videoQueue = gst_element_factory_make("queue", nullptr);
     pipeline.videoRate = gst_element_factory_make("videorate", nullptr);
     pipeline.videoConvert = gst_element_factory_make("videoconvert", nullptr);
     pipeline.videoScale = gst_element_factory_make("videoscale", nullptr);
     pipeline.videoCapsFilter = gst_element_factory_make("capsfilter", nullptr);
-    pipeline.videoEncoder = gst_element_factory_make("qsvh264enc", nullptr);
+    pipeline.videoEncoderCapsFilter = gst_element_factory_make("capsfilter", nullptr);
+    pipeline.videoEncoder = createRecordingVideoEncoder(encoderName);
     pipeline.videoParser = gst_element_factory_make("h264parse", nullptr);
     pipeline.videoH264CapsFilter = gst_element_factory_make("capsfilter", nullptr);
     pipeline.videoOutputValve = gst_element_factory_make("valve", nullptr);
@@ -162,13 +181,14 @@ RecordingResult prepareVideoPath(
         pipeline.videoConvert == nullptr ||
         pipeline.videoScale == nullptr ||
         pipeline.videoCapsFilter == nullptr ||
+        pipeline.videoEncoderCapsFilter == nullptr ||
         pipeline.videoEncoder == nullptr ||
         pipeline.videoParser == nullptr ||
         pipeline.videoH264CapsFilter == nullptr ||
         pipeline.videoOutputValve == nullptr ||
         pipeline.muxer == nullptr ||
         pipeline.sink == nullptr) {
-        return RecordingResult{false, "Failed to create recording video pipeline elements"};
+        return RecordingResult{false, "Failed to create recording video pipeline elements or video encoder"};
     }
 
     g_object_set(
@@ -181,8 +201,22 @@ RecordingResult prepareVideoPath(
     );
     g_object_set(pipeline.videoQueue, "max-size-buffers", 0, "max-size-bytes", 0, "max-size-time", 0, nullptr);
     g_object_set(pipeline.videoOutputValve, "drop", TRUE, "drop-mode", 1, nullptr);
-    g_object_set(pipeline.videoEncoder, "target-usage", 4, nullptr);
     g_object_set(pipeline.sink, "location", pipeline.outputPath.c_str(), "sync", FALSE, nullptr);
+
+    if (encoderName == "qsvh264enc") {
+        g_object_set(pipeline.videoEncoder, "target-usage", 4, nullptr);
+    } else if (encoderName == "x264enc") {
+        g_object_set(
+            pipeline.videoEncoder,
+            "speed-preset",
+            1,
+            "tune",
+            0x00000004,
+            "key-int-max",
+            30,
+            nullptr
+        );
+    }
 
     GstCaps* videoCaps = gst_caps_new_simple(
         "video/x-raw",
@@ -203,6 +237,16 @@ RecordingResult prepareVideoPath(
     );
     g_object_set(pipeline.videoCapsFilter, "caps", videoCaps, nullptr);
     gst_caps_unref(videoCaps);
+
+    GstCaps* encoderInputCaps = gst_caps_new_simple(
+        "video/x-raw",
+        "format",
+        G_TYPE_STRING,
+        "NV12",
+        nullptr
+    );
+    g_object_set(pipeline.videoEncoderCapsFilter, "caps", encoderInputCaps, nullptr);
+    gst_caps_unref(encoderInputCaps);
 
     GstCaps* h264Caps = gst_caps_new_simple(
         "video/x-h264",
@@ -225,6 +269,7 @@ RecordingResult prepareVideoPath(
         pipeline.videoConvert,
         pipeline.videoScale,
         pipeline.videoCapsFilter,
+        pipeline.videoEncoderCapsFilter,
         pipeline.videoEncoder,
         pipeline.videoParser,
         pipeline.videoH264CapsFilter,
@@ -241,6 +286,7 @@ RecordingResult prepareVideoPath(
             pipeline.videoConvert,
             pipeline.videoScale,
             pipeline.videoCapsFilter,
+            pipeline.videoEncoderCapsFilter,
             pipeline.videoEncoder,
             pipeline.videoParser,
             pipeline.videoH264CapsFilter,
@@ -531,6 +577,18 @@ RecordingResult startAvRecordingPipeline(
 
     pipeline.startedAt = std::chrono::steady_clock::now();
     return RecordingResult{true, "Recording started"};
+}
+
+bool hasSupportedRecordingVideoEncoder() {
+    for (const char* candidate : kPreferredRecordingVideoEncoders) {
+        GstElementFactory* factory = gst_element_factory_find(candidate);
+        if (factory != nullptr) {
+            gst_object_unref(factory);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 RecordingResult stopAvRecordingPipeline(AvRecordingPipeline& pipeline) {

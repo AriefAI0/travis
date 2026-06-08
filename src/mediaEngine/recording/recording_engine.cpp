@@ -112,6 +112,11 @@ RecordingResult RecordingEngine::startRecording(
         return RecordingResult{false, "outputPath is required"};
     }
 
+    const auto outputValidationResult = validateRecordingOutputPath(outputPath);
+    if (!outputValidationResult.ok) {
+        return outputValidationResult;
+    }
+
     if (videoInputs.size() != 1) {
         return RecordingResult{false, "AV recording records exactly one video source per file"};
     }
@@ -128,7 +133,13 @@ RecordingResult RecordingEngine::startRecording(
         };
     }
 
-    removeAvRecordingPipelineContext(recordingId);
+    if (avRecordingPipelines_.find(recordingId) != avRecordingPipelines_.end()) {
+        return RecordingResult{false, "RecordingId is already active"};
+    }
+
+    if (!hasSupportedRecordingVideoEncoder()) {
+        return RecordingResult{false, "No supported H.264 encoder is available for recording"};
+    }
 
     std::vector<AvRecordingVideoInput> avVideoInputs;
     std::vector<travis::media_engine::session::MediaSourceSession*> sourceSessions;

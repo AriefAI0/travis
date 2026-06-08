@@ -11,11 +11,10 @@ namespace travis::media_engine::core {
 
 namespace {
 
-constexpr std::array<const char*, 6> kRequiredElements = {
+constexpr std::array<const char*, 5> kRequiredElements = {
     "ndisrc",
     "ndisrcdemux",
     "mfvideosrc",
-    "qsvh264enc",
     "h264parse",
     "matroskamux",
 };
@@ -40,6 +39,14 @@ GStreamerHealthCheckResult MediaRuntime::healthCheck() const {
 
     if (!hasD3d11PreviewSink && !hasGlPreviewSink) {
         missingPlugins.append(QStringLiteral("qml6d3d11sink|qml6glsink"));
+    }
+
+    const bool hasRecordingEncoder =
+        hasElementFactory("qsvh264enc") ||
+        hasElementFactory("mfh264enc") ||
+        hasElementFactory("x264enc");
+    if (!hasRecordingEncoder) {
+        missingPlugins.append(QStringLiteral("qsvh264enc|mfh264enc|x264enc"));
     }
 
     if (hasGlPreviewSink) {

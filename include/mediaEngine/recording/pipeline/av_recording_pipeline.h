@@ -45,6 +45,7 @@ struct AvRecordingPipeline {
     GstElement* videoConvert = nullptr;
     GstElement* videoScale = nullptr;
     GstElement* videoCapsFilter = nullptr;
+    GstElement* videoEncoderCapsFilter = nullptr;
     GstElement* videoEncoder = nullptr;
     GstElement* videoParser = nullptr;
     GstElement* videoH264CapsFilter = nullptr;
@@ -64,6 +65,8 @@ struct AvRecordingPipeline {
     bool receivedAudioBuffer = false;
     std::chrono::steady_clock::time_point startedAt;
 };
+
+[[nodiscard]] bool hasSupportedRecordingVideoEncoder();
 
 [[nodiscard]] RecordingResult startAvRecordingPipeline(
     const std::string& recordingId,
