@@ -20,6 +20,9 @@
 #include "data/repositories/timeline_thumbnail_repository.h"
 #include "data/repositories/tooling_repository.h"
 #include "data/repositories/video_clip_repository.h"
+#include "application/playback/playback_workflow_service.h"
+#include "application/recording/recording_workflow_service.h"
+#include "application/recovery/recording_recovery_service.h"
 #include "services/execution_service.h"
 #include "services/inspection_clip_service.h"
 #include "services/project_service.h"
@@ -58,6 +61,12 @@ public:
     travis::services::VideoService& videoService();
     // Returns the shared inspection-clip service.
     travis::services::InspectionClipService& inspectionClipService();
+    // Returns the shared recording workflow service.
+    travis::application::recording::RecordingWorkflowService& recordingWorkflowService();
+    // Returns the shared playback workflow service.
+    travis::application::playback::PlaybackWorkflowService& playbackWorkflowService();
+    // Returns the shared recording recovery service.
+    travis::application::recovery::RecordingRecoveryService& recordingRecoveryService();
 
     // Returns the shared project service.
     const travis::services::ProjectService& projectService() const;
@@ -75,6 +84,12 @@ public:
     const travis::services::VideoService& videoService() const;
     // Returns the shared inspection-clip service.
     const travis::services::InspectionClipService& inspectionClipService() const;
+    // Returns the shared recording workflow service.
+    const travis::application::recording::RecordingWorkflowService& recordingWorkflowService() const;
+    // Returns the shared playback workflow service.
+    const travis::application::playback::PlaybackWorkflowService& playbackWorkflowService() const;
+    // Returns the shared recording recovery service.
+    const travis::application::recovery::RecordingRecoveryService& recordingRecoveryService() const;
 
 private:
     travis::data::database::DatabaseBootstrap databaseBootstrap_;
@@ -102,6 +117,9 @@ private:
     std::optional<travis::services::ResultMediaService> resultMediaService_;
     std::optional<travis::services::VideoService> videoService_;
     std::optional<travis::services::InspectionClipService> inspectionClipService_;
+    std::optional<travis::application::recording::RecordingWorkflowService> recordingWorkflowService_;
+    std::optional<travis::application::playback::PlaybackWorkflowService> playbackWorkflowService_;
+    std::optional<travis::application::recovery::RecordingRecoveryService> recordingRecoveryService_;
 
     QString lastError_;
 };

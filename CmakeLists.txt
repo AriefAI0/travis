@@ -17,7 +17,6 @@ qt_policy(SET QTP0004 NEW)
 set(TRAVIS_GSTREAMER_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/runtime/gstreamer/1.0/msvc_x86_64)
 
 add_library(travis_data_database
-    src/app/app_context.cpp
     src/data/database/application_identity.cpp
     src/data/database/database_bootstrap.cpp
     src/data/database/database_manager.cpp
@@ -73,6 +72,10 @@ target_link_libraries(travis_services
 )
 
 add_library(travis_application
+    include/application/playback/playback_workflow_service.h
+    include/application/recording/recording_workflow_service.h
+    include/application/recovery/recording_recovery_service.h
+    src/app/app_context.cpp
     src/application/playback/playback_workflow_service.cpp
     src/application/recording/recording_workflow_service.cpp
     src/application/recovery/recording_recovery_service.cpp
@@ -134,8 +137,10 @@ target_link_libraries(travis_media_engine
 
 add_library(travis_ui
     include/ui/controllers/preview_surface_controller.h
+    include/ui/viewmodels/playback_viewmodel.h
     include/ui/viewmodels/recording_viewmodel.h
     src/ui/controllers/preview_surface_controller.cpp
+    src/ui/viewmodels/playback_viewmodel.cpp
     src/ui/viewmodels/recording_viewmodel.cpp
 )
 

@@ -4,6 +4,8 @@
 #include <QQmlContext>
 
 #include "ui/controllers/preview_surface_controller.h"
+#include "ui/viewmodels/playback_viewmodel.h"
+#include "ui/viewmodels/recording_viewmodel.h"
 
 // Publishes the first native preview controller to QML and keeps startup validation centralized.
 
@@ -19,10 +21,22 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
 
     auto* previewSurfaceController =
         new travis::ui::controllers::PreviewSurfaceController(&engine);
+    auto* recordingViewModel =
+        new travis::ui::viewmodels::RecordingViewModel(appContext_.recordingWorkflowService(), &engine);
+    auto* playbackViewModel =
+        new travis::ui::viewmodels::PlaybackViewModel(appContext_.playbackWorkflowService(), &engine);
 
     engine.rootContext()->setContextProperty(
         QStringLiteral("previewSurfaceController"),
         previewSurfaceController
+    );
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("recordingViewModel"),
+        recordingViewModel
+    );
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("playbackViewModel"),
+        playbackViewModel
     );
 
     lastError_.clear();
