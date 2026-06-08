@@ -38,6 +38,11 @@ struct StopRecordingWorkflowResult {
     std::optional<travis::models::MasterVideo> masterVideo;
 };
 
+struct PauseRecordingWorkflowResult {
+    bool ok = false;
+    QString message;
+};
+
 struct StartInspectionClipWorkflowInput {
     QString recordingId;
     qint64 itemId = 0;
@@ -72,6 +77,8 @@ public:
         const StartRecordingWorkflowInput& input
     );
     [[nodiscard]] StopRecordingWorkflowResult stopRecording(const QString& recordingId);
+    [[nodiscard]] PauseRecordingWorkflowResult pauseRecording(const QString& recordingId);
+    [[nodiscard]] PauseRecordingWorkflowResult resumeRecording(const QString& recordingId);
     [[nodiscard]] std::optional<travis::models::MasterVideo> getActiveMasterVideo(
         const QString& recordingId
     ) const;
@@ -92,6 +99,8 @@ private:
         qint64 sessionId = 0;
         qint64 masterVideoId = 0;
         qint64 startedAtMs = 0;
+        qint64 accumulatedPausedMs = 0;
+        std::optional<qint64> pausedAtMs;
         QString outputPath;
     };
 

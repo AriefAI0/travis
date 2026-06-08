@@ -232,6 +232,36 @@ RecordingResult RecordingEngine::stopRecording(const std::string& recordingId) {
     return RecordingResult{false, "Recording is not running"};
 }
 
+RecordingResult RecordingEngine::pauseRecording(const std::string& recordingId) {
+    if (recordingId.empty()) {
+        return RecordingResult{false, "recordingId is required"};
+    }
+
+    const auto avPipeline = avRecordingPipelines_.find(recordingId);
+    if (avPipeline == avRecordingPipelines_.end()) {
+        return RecordingResult{false, "Recording is not running"};
+    }
+
+    if (!avPipeline->second->inspectionClipBranches.empty()) {
+        return RecordingResult{false, "Stop active inspection clips before pausing recording"};
+    }
+
+    return pauseAvRecordingPipeline(*avPipeline->second);
+}
+
+RecordingResult RecordingEngine::resumeRecording(const std::string& recordingId) {
+    if (recordingId.empty()) {
+        return RecordingResult{false, "recordingId is required"};
+    }
+
+    const auto avPipeline = avRecordingPipelines_.find(recordingId);
+    if (avPipeline == avRecordingPipelines_.end()) {
+        return RecordingResult{false, "Recording is not running"};
+    }
+
+    return resumeAvRecordingPipeline(*avPipeline->second);
+}
+
 RecordingResult RecordingEngine::startClipRecording(
     const std::string& recordingId,
     int clipId,
@@ -244,6 +274,10 @@ RecordingResult RecordingEngine::startClipRecording(
     const auto avPipeline = avRecordingPipelines_.find(recordingId);
     if (avPipeline == avRecordingPipelines_.end()) {
         return RecordingResult{false, "Recording is not running"};
+    }
+
+    if (avPipeline->second->paused) {
+        return RecordingResult{false, "Resume recording before starting an inspection clip"};
     }
 
     return startAvInspectionClip(*avPipeline->second, clipId, outputPath);
@@ -283,7 +317,11 @@ RecordingPositionResult RecordingEngine::getRecordingPosition(const std::string&
     const auto avPipeline = avRecordingPipelines_.find(recordingId);
     if (avPipeline != avRecordingPipelines_.end()) {
         const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-                                   std::chrono::steady_clock::now() - avPipeline->second->startedAt
+                                   std::chrono::steady_clock::now() - avPipeline->second->startedAt -
+                                   avPipeline->second->accumulatedPauseDuration -
+                                   (avPipeline->second->pausedAt.has_value()
+                                        ? std::chrono::steady_clock::now() - *avPipeline->second->pausedAt
+                                        : std::chrono::steady_clock::duration::zero())
                                )
                                    .count();
         return RecordingPositionResult{true, "Recording position estimated", elapsedMs};

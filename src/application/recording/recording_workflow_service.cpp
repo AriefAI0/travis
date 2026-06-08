@@ -142,6 +142,45 @@ StopRecordingWorkflowResult RecordingWorkflowService::stopRecording(const QStrin
     return {true, QString::fromStdString(stopResult.message), updatedMasterVideo};
 }
 
+PauseRecordingWorkflowResult RecordingWorkflowService::pauseRecording(const QString& recordingId) {
+    const QString normalizedRecordingId = requiredText(recordingId, "recordingId is required");
+    const auto context = activeRecordingContext(normalizedRecordingId);
+    if (!context.has_value()) {
+        return {false, "Recording workflow is not active"};
+    }
+
+    const auto pauseResult = recordingEngine_.pauseRecording(normalizedRecordingId.toStdString());
+    if (!pauseResult.ok) {
+        return {false, QString::fromStdString(pauseResult.message)};
+    }
+
+    auto updatedContext = *context;
+    updatedContext.pausedAtMs = currentEpochMilliseconds();
+    activeRecordings_.insert(normalizedRecordingId, updatedContext);
+    return {true, QString::fromStdString(pauseResult.message)};
+}
+
+PauseRecordingWorkflowResult RecordingWorkflowService::resumeRecording(const QString& recordingId) {
+    const QString normalizedRecordingId = requiredText(recordingId, "recordingId is required");
+    const auto context = activeRecordingContext(normalizedRecordingId);
+    if (!context.has_value()) {
+        return {false, "Recording workflow is not active"};
+    }
+
+    const auto resumeResult = recordingEngine_.resumeRecording(normalizedRecordingId.toStdString());
+    if (!resumeResult.ok) {
+        return {false, QString::fromStdString(resumeResult.message)};
+    }
+
+    auto updatedContext = *context;
+    if (updatedContext.pausedAtMs.has_value()) {
+        updatedContext.accumulatedPausedMs += currentEpochMilliseconds() - *updatedContext.pausedAtMs;
+        updatedContext.pausedAtMs.reset();
+    }
+    activeRecordings_.insert(normalizedRecordingId, updatedContext);
+    return {true, QString::fromStdString(resumeResult.message)};
+}
+
 std::optional<travis::models::MasterVideo> RecordingWorkflowService::getActiveMasterVideo(
     const QString& recordingId
 ) const {
@@ -161,6 +200,10 @@ std::optional<travis::services::InspectionClipLifecycle> RecordingWorkflowServic
         throw std::runtime_error("Recording workflow is not active");
     }
 
+    if (context->pausedAtMs.has_value()) {
+        throw std::runtime_error("Resume recording before starting an inspection clip");
+    }
+
     const auto clipLifecycle = inspectionClipService_.startInspectionClipFromRecording({
         .sessionId = context->sessionId,
         .itemId = input.itemId,
@@ -168,7 +211,7 @@ std::optional<travis::services::InspectionClipLifecycle> RecordingWorkflowServic
         .executionUnitId = input.executionUnitId,
         .toolingId = input.toolingId,
         .masterVideoId = context->masterVideoId,
-        .startOffsetMs = currentEpochMilliseconds() - context->startedAtMs,
+        .startOffsetMs = currentEpochMilliseconds() - context->startedAtMs - context->accumulatedPausedMs,
         .value = input.value,
         .remarks = input.remarks,
         .configSnapshot = input.configSnapshot,
@@ -224,7 +267,8 @@ std::optional<travis::services::InspectionClipLifecycle> RecordingWorkflowServic
         throw std::runtime_error(engineResult.message);
     }
 
-    const qint64 endOffsetMs = currentEpochMilliseconds() - context->startedAtMs;
+    const qint64 endOffsetMs =
+        currentEpochMilliseconds() - context->startedAtMs - context->accumulatedPausedMs;
     return inspectionClipService_.stopInspectionClip({
         .clipId = input.clipId,
         .endOffsetMs = endOffsetMs,

@@ -5,6 +5,7 @@
 #include <chrono>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -90,7 +91,10 @@ struct AvRecordingPipeline {
     bool audioActive = false;
     bool receivedVideoBuffer = false;
     bool receivedAudioBuffer = false;
+    bool paused = false;
+    std::chrono::steady_clock::duration accumulatedPauseDuration = std::chrono::steady_clock::duration::zero();
     std::chrono::steady_clock::time_point startedAt;
+    std::optional<std::chrono::steady_clock::time_point> pausedAt;
 };
 
 [[nodiscard]] bool hasSupportedRecordingVideoEncoder();
@@ -105,6 +109,8 @@ struct AvRecordingPipeline {
     AvRecordingPipeline& pipeline
 );
 [[nodiscard]] RecordingResult stopAvRecordingPipeline(AvRecordingPipeline& pipeline);
+[[nodiscard]] RecordingResult pauseAvRecordingPipeline(AvRecordingPipeline& pipeline);
+[[nodiscard]] RecordingResult resumeAvRecordingPipeline(AvRecordingPipeline& pipeline);
 [[nodiscard]] RecordingResult startAvInspectionClip(
     AvRecordingPipeline& pipeline,
     int clipId,

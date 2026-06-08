@@ -809,6 +809,47 @@ RecordingResult stopAvRecordingPipeline(AvRecordingPipeline& pipeline) {
     return RecordingResult{false, "Timed out waiting for recording finalization"};
 }
 
+RecordingResult pauseAvRecordingPipeline(AvRecordingPipeline& pipeline) {
+    if (pipeline.pipeline == nullptr) {
+        return RecordingResult{false, "Recording pipeline is not running"};
+    }
+
+    if (pipeline.paused) {
+        return RecordingResult{false, "Recording is already paused"};
+    }
+
+    const GstStateChangeReturn stateResult =
+        gst_element_set_state(pipeline.pipeline, GST_STATE_PAUSED);
+    if (stateResult == GST_STATE_CHANGE_FAILURE) {
+        return RecordingResult{false, "Failed to pause recording pipeline"};
+    }
+
+    pipeline.paused = true;
+    pipeline.pausedAt = std::chrono::steady_clock::now();
+    return RecordingResult{true, "Recording paused"};
+}
+
+RecordingResult resumeAvRecordingPipeline(AvRecordingPipeline& pipeline) {
+    if (pipeline.pipeline == nullptr) {
+        return RecordingResult{false, "Recording pipeline is not running"};
+    }
+
+    if (!pipeline.paused || !pipeline.pausedAt.has_value()) {
+        return RecordingResult{false, "Recording is not paused"};
+    }
+
+    const GstStateChangeReturn stateResult =
+        gst_element_set_state(pipeline.pipeline, GST_STATE_PLAYING);
+    if (stateResult == GST_STATE_CHANGE_FAILURE) {
+        return RecordingResult{false, "Failed to resume recording pipeline"};
+    }
+
+    pipeline.accumulatedPauseDuration += std::chrono::steady_clock::now() - *pipeline.pausedAt;
+    pipeline.pausedAt.reset();
+    pipeline.paused = false;
+    return RecordingResult{true, "Recording resumed"};
+}
+
 RecordingResult startAvInspectionClip(
     AvRecordingPipeline& pipeline,
     int clipId,
@@ -816,6 +857,10 @@ RecordingResult startAvInspectionClip(
 ) {
     if (pipeline.pipeline == nullptr || pipeline.videoEncodedTee == nullptr) {
         return RecordingResult{false, "Recording pipeline is not running"};
+    }
+
+    if (pipeline.paused) {
+        return RecordingResult{false, "Resume recording before starting a clip"};
     }
 
     if (clipId < 1) {

@@ -38,6 +38,8 @@ public:
         const std::vector<RecordingAudioInput>& audioInputs
     );
     [[nodiscard]] RecordingResult stopRecording(const std::string& recordingId);
+    [[nodiscard]] RecordingResult pauseRecording(const std::string& recordingId);
+    [[nodiscard]] RecordingResult resumeRecording(const std::string& recordingId);
     [[nodiscard]] RecordingResult startClipRecording(
         const std::string& recordingId,
         int clipId,
