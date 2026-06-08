@@ -3,6 +3,7 @@
 #include <gst/gst.h>
 
 #include <array>
+#include <utility>
 
 // Owns the shared GStreamer bootstrap used by embedded media-engine modules.
 
@@ -10,13 +11,10 @@ namespace travis::media_engine::core {
 
 namespace {
 
-constexpr std::array<const char*, 9> kRequiredElements = {
+constexpr std::array<const char*, 6> kRequiredElements = {
     "ndisrc",
     "ndisrcdemux",
     "mfvideosrc",
-    "qml6glsink",
-    "glupload",
-    "glcolorconvert",
     "qsvh264enc",
     "h264parse",
     "matroskamux",
@@ -34,6 +32,22 @@ GStreamerHealthCheckResult MediaRuntime::healthCheck() const {
     for (const char* elementName : kRequiredElements) {
         if (!hasElementFactory(elementName)) {
             missingPlugins.append(QString::fromUtf8(elementName));
+        }
+    }
+
+    const bool hasD3d11PreviewSink = hasElementFactory("qml6d3d11sink");
+    const bool hasGlPreviewSink = hasElementFactory("qml6glsink");
+
+    if (!hasD3d11PreviewSink && !hasGlPreviewSink) {
+        missingPlugins.append(QStringLiteral("qml6d3d11sink|qml6glsink"));
+    }
+
+    if (hasGlPreviewSink) {
+        if (!hasElementFactory("glupload")) {
+            missingPlugins.append(QStringLiteral("glupload"));
+        }
+        if (!hasElementFactory("glcolorconvert")) {
+            missingPlugins.append(QStringLiteral("glcolorconvert"));
         }
     }
 

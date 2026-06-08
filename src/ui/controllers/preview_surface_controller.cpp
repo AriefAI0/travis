@@ -2,7 +2,7 @@
 
 #include <QQuickItem>
 
-// Keeps the first preview surface bridge thin while validating the qml6glsink path.
+// Keeps the first preview surface bridge thin while validating the native Qt/QML preview path.
 
 namespace travis::ui::controllers {
 

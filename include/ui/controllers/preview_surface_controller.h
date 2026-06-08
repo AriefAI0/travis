@@ -11,7 +11,7 @@
 
 class QQuickItem;
 
-// Exposes the first qml6glsink preview controls and status to QML.
+// Exposes the native Qt/QML preview controls and status to QML.
 
 namespace travis::ui::controllers {
 

@@ -2,10 +2,20 @@
 
 #include <gst/gst.h>
 
-// Creates the QML-native preview sink used by the embedded preview engine.
+// Selects the Qt/QML-native preview sink strategy for the embedded preview engine.
 
 namespace travis::media_engine::core {
 
-GstElement* createPreviewVideoSink();
+enum class PreviewVideoSinkKind {
+    Qml6D3d11,
+    Qml6Gl,
+};
+
+struct PreviewVideoSinkSelection {
+    PreviewVideoSinkKind kind;
+    GstElement* sink = nullptr;
+};
+
+[[nodiscard]] PreviewVideoSinkSelection createPreviewVideoSink();
 
 } // namespace travis::media_engine::core

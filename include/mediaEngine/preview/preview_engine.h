@@ -7,11 +7,12 @@
 
 #include <QPointer>
 
+#include "mediaEngine/core/video_sink_selector.h"
 #include "mediaEngine/session/media_source_session.h"
 
 class QQuickItem;
 
-// Owns the native preview branch that connects shared media sessions to qml6glsink.
+// Owns the native preview branch that connects shared media sessions to the selected Qt/QML sink.
 
 namespace travis::media_engine::preview {
 
@@ -43,6 +44,8 @@ private:
         QPointer<QQuickItem> targetItem;
         travis::media_engine::session::MediaSourceSession* session = nullptr;
         GstElement* queue = nullptr;
+        travis::media_engine::core::PreviewVideoSinkKind sinkKind =
+            travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl;
         GstElement* glUpload = nullptr;
         GstElement* glColorConvert = nullptr;
         GstElement* sink = nullptr;

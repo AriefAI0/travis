@@ -4,7 +4,7 @@
 
 #include <QQuickItem>
 
-// Reuses shared source sessions and attaches a qml6glsink branch for live preview.
+// Reuses shared source sessions and attaches the selected Qt/QML sink branch for live preview.
 
 namespace travis::media_engine::preview {
 
@@ -114,43 +114,67 @@ PreviewResult PreviewEngine::createPreviewBranch(
     QQuickItem* targetItem
 ) {
     ActivePreview& preview = *activePreview_;
+    const auto sinkSelection = travis::media_engine::core::createPreviewVideoSink();
 
     preview.queue = gst_element_factory_make("queue", nullptr);
-    preview.glUpload = gst_element_factory_make("glupload", nullptr);
-    preview.glColorConvert = gst_element_factory_make("glcolorconvert", nullptr);
-    preview.sink = travis::media_engine::core::createPreviewVideoSink();
+    preview.sinkKind = sinkSelection.kind;
+    preview.sink = sinkSelection.sink;
+
+    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
+        preview.glUpload = gst_element_factory_make("glupload", nullptr);
+        preview.glColorConvert = gst_element_factory_make("glcolorconvert", nullptr);
+    }
 
     if (preview.queue == nullptr ||
-        preview.glUpload == nullptr ||
-        preview.glColorConvert == nullptr ||
         preview.sink == nullptr) {
         return PreviewResult{false, "Failed to create preview branch elements"};
+    }
+
+    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl &&
+        (preview.glUpload == nullptr || preview.glColorConvert == nullptr)) {
+        return PreviewResult{false, "Failed to create the OpenGL preview path"};
     }
 
     g_object_set(preview.queue, "leaky", 2, "max-size-buffers", 2, nullptr);
     g_object_set(preview.sink, "widget", targetItem, "force-aspect-ratio", TRUE, nullptr);
 
-    gst_bin_add_many(
-        GST_BIN(session.pipeline),
-        preview.queue,
-        preview.glUpload,
-        preview.glColorConvert,
-        preview.sink,
-        nullptr
-    );
-
-    const GstStateChangeReturn sinkReadyResult = gst_element_set_state(preview.sink, GST_STATE_READY);
-    if (sinkReadyResult == GST_STATE_CHANGE_FAILURE) {
-        return PreviewResult{false, "Failed to prepare qml6glsink"};
-    }
-
-    if (!gst_element_link_many(
+    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
+        gst_bin_add_many(
+            GST_BIN(session.pipeline),
             preview.queue,
             preview.glUpload,
             preview.glColorConvert,
             preview.sink,
             nullptr
-        )) {
+        );
+    } else {
+        gst_bin_add_many(
+            GST_BIN(session.pipeline),
+            preview.queue,
+            preview.sink,
+            nullptr
+        );
+    }
+
+    const GstStateChangeReturn sinkReadyResult = gst_element_set_state(preview.sink, GST_STATE_READY);
+    if (sinkReadyResult == GST_STATE_CHANGE_FAILURE) {
+        return PreviewResult{false, "Failed to prepare the selected QML preview sink"};
+    }
+
+    bool linkOk = false;
+    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
+        linkOk = gst_element_link_many(
+            preview.queue,
+            preview.glUpload,
+            preview.glColorConvert,
+            preview.sink,
+            nullptr
+        );
+    } else {
+        linkOk = gst_element_link(preview.queue, preview.sink);
+    }
+
+    if (!linkOk) {
         return PreviewResult{false, "Failed to link preview branch elements"};
     }
 
@@ -160,10 +184,16 @@ PreviewResult PreviewEngine::createPreviewBranch(
         return PreviewResult{false, attachResult.message};
     }
 
-    if (!gst_element_sync_state_with_parent(preview.sink) ||
-        !gst_element_sync_state_with_parent(preview.glColorConvert) ||
-        !gst_element_sync_state_with_parent(preview.glUpload) ||
-        !gst_element_sync_state_with_parent(preview.queue)) {
+    bool syncOk = gst_element_sync_state_with_parent(preview.sink) &&
+        gst_element_sync_state_with_parent(preview.queue);
+
+    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
+        syncOk = syncOk &&
+            gst_element_sync_state_with_parent(preview.glColorConvert) &&
+            gst_element_sync_state_with_parent(preview.glUpload);
+    }
+
+    if (!syncOk) {
         return PreviewResult{false, "Failed to sync preview branch with live source session"};
     }
 
@@ -193,14 +223,23 @@ PreviewResult PreviewEngine::clearActivePreview() {
     }
 
     if (preview.session != nullptr) {
-        gst_bin_remove_many(
-            GST_BIN(preview.session->pipeline),
-            preview.queue,
-            preview.glUpload,
-            preview.glColorConvert,
-            preview.sink,
-            nullptr
-        );
+        if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
+            gst_bin_remove_many(
+                GST_BIN(preview.session->pipeline),
+                preview.queue,
+                preview.glUpload,
+                preview.glColorConvert,
+                preview.sink,
+                nullptr
+            );
+        } else {
+            gst_bin_remove_many(
+                GST_BIN(preview.session->pipeline),
+                preview.queue,
+                preview.sink,
+                nullptr
+            );
+        }
         sessionManager_.releaseSession(*preview.session);
     }
 
