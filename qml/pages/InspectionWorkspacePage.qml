@@ -13,11 +13,17 @@ Item {
     property var navigation
     property int projectId: 0
 
+    function applyInspectionSession() {
+        if (inspectionContextViewModel.sessionId > 0) {
+            recordingViewModel.sessionId = inspectionContextViewModel.sessionId
+        }
+    }
+
     InspectionWorkspaceLayout {
         anchors.fill: parent
         title: "Inspection Workspace"
         subtitle: projectId > 0
-            ? `Native inspection workspace for project ${projectId}`
+            ? `Inspection workspace for ${inspectionContextViewModel.project.title || ("project " + projectId)}`
             : "Native Qt/QML shell for preview, source selection, and recording control"
 
         headerActions: [
@@ -25,6 +31,12 @@ Item {
                 text: "Projects"
                 visible: root.navigation
                 onClicked: root.navigation.goProjects()
+            },
+
+            Button {
+                text: "Project"
+                visible: root.navigation && root.projectId > 0
+                onClicked: root.navigation.goProject(root.projectId)
             },
 
             RecordingControls {
@@ -35,7 +47,9 @@ Item {
         controls: [
             StatusBanner {
                 Layout.fillWidth: true
-                message: recordingViewModel.lastError.length > 0
+                message: inspectionContextViewModel.lastError.length > 0
+                    ? inspectionContextViewModel.lastError
+                    : recordingViewModel.lastError.length > 0
                     ? recordingViewModel.lastError
                     : previewSurfaceController.lastError
                 error: true
@@ -43,10 +57,69 @@ Item {
 
             StatusBanner {
                 Layout.fillWidth: true
-                message: recordingViewModel.statusMessage.length > 0
+                message: inspectionContextViewModel.statusMessage.length > 0
+                    ? inspectionContextViewModel.statusMessage
+                    : recordingViewModel.statusMessage.length > 0
                     ? recordingViewModel.statusMessage
                     : playbackViewModel.statusMessage
                 error: false
+            },
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label {
+                    color: "#e3ebf3"
+                    text: "Inspection Session"
+                }
+
+                ComboBox {
+                    id: sessionCombo
+
+                    Layout.preferredWidth: 260
+                    model: inspectionContextViewModel.sessions
+                    textRole: "name"
+                    valueRole: "sessionId"
+                    displayText: currentIndex >= 0 ? currentText : "Select session"
+                    enabled: root.projectId > 0 && inspectionContextViewModel.sessions.length > 0
+
+                    onActivated: {
+                        if (inspectionContextViewModel.selectSession(currentValue)) {
+                            root.applyInspectionSession()
+                        }
+                    }
+                }
+
+                TextField {
+                    id: sessionNameField
+
+                    Layout.preferredWidth: 220
+                    placeholderText: "New session name"
+                    enabled: root.projectId > 0
+                    onAccepted: createSessionButton.clicked()
+                }
+
+                Button {
+                    id: createSessionButton
+
+                    text: "Create Session"
+                    enabled: root.projectId > 0 && !inspectionContextViewModel.loading
+                    onClicked: {
+                        if (inspectionContextViewModel.createSession(sessionNameField.text)) {
+                            sessionNameField.clear()
+                            root.applyInspectionSession()
+                        }
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    color: "#9fb1bf"
+                    text: inspectionContextViewModel.sessionId > 0
+                        ? `Active session: ${inspectionContextViewModel.selectedSession.name}`
+                        : "Create or select a session before recording"
+                    elide: Text.ElideRight
+                }
             },
 
             RowLayout {
@@ -74,6 +147,7 @@ Item {
                     text: recordingViewModel.sessionId > 0 ? recordingViewModel.sessionId.toString() : ""
                     placeholderText: "1"
                     inputMethodHints: Qt.ImhDigitsOnly
+                    enabled: false
                     onTextChanged: recordingViewModel.sessionId = text.length > 0 ? Number(text) : 0
                 }
 
@@ -116,5 +190,24 @@ Item {
         ]
     }
 
-    Component.onCompleted: sourceDiscoveryViewModel.refreshAll()
+    onProjectIdChanged: {
+        if (projectId > 0 && inspectionContextViewModel.loadProject(projectId)) {
+            root.applyInspectionSession()
+        }
+    }
+
+    Component.onCompleted: {
+        sourceDiscoveryViewModel.refreshAll()
+        if (projectId > 0 && inspectionContextViewModel.loadProject(projectId)) {
+            root.applyInspectionSession()
+        }
+    }
+
+    Connections {
+        target: inspectionContextViewModel
+
+        function onSessionChanged() {
+            root.applyInspectionSession()
+        }
+    }
 }

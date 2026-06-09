@@ -5,6 +5,7 @@
 
 #include "ui/controllers/preview_surface_controller.h"
 #include "ui/viewmodels/audio_meter_viewmodel.h"
+#include "ui/viewmodels/inspection_context_viewmodel.h"
 #include "ui/viewmodels/playback_viewmodel.h"
 #include "ui/viewmodels/project_viewmodel.h"
 #include "ui/viewmodels/project_workspace_viewmodel.h"
@@ -36,6 +37,12 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
             appContext_.sessionService(),
             &engine
         );
+    auto* inspectionContextViewModel =
+        new travis::ui::viewmodels::InspectionContextViewModel(
+            appContext_.projectService(),
+            appContext_.sessionService(),
+            &engine
+        );
     auto* playbackViewModel =
         new travis::ui::viewmodels::PlaybackViewModel(appContext_.playbackWorkflowService(), &engine);
     auto* sourceDiscoveryViewModel =
@@ -54,6 +61,10 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
     engine.rootContext()->setContextProperty(
         QStringLiteral("projectWorkspaceViewModel"),
         projectWorkspaceViewModel
+    );
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("inspectionContextViewModel"),
+        inspectionContextViewModel
     );
     engine.rootContext()->setContextProperty(
         QStringLiteral("recordingViewModel"),
