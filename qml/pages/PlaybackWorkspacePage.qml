@@ -19,6 +19,10 @@ WorkspaceShellLayout {
             return
         }
 
+        if (playbackSurfaceController) {
+            playbackSurfaceController.stopPlayback()
+        }
+
         playbackViewModel.clearSelection()
 
         if (root.masterVideoId > 0) {
@@ -48,7 +52,9 @@ WorkspaceShellLayout {
     body: [
         StatusBanner {
             Layout.fillWidth: true
-            message: playbackViewModel ? playbackViewModel.lastError : ""
+            message: playbackViewModel && playbackViewModel.lastError.length > 0
+                ? playbackViewModel.lastError
+                : playbackSurfaceController ? playbackSurfaceController.lastError : ""
             error: true
         },
 
@@ -88,18 +94,47 @@ WorkspaceShellLayout {
                     wrapMode: Text.Wrap
                 }
 
-                Rectangle {
+                PlaybackSurface {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: 10
-                    color: "#06090d"
-                    border.color: "#22313e"
-                    border.width: 1
+                    playbackController: playbackSurfaceController
 
                     Label {
                         anchors.centerIn: parent
+                        visible: !playbackSurfaceController || !playbackSurfaceController.playbackActive
                         color: "#758796"
-                        text: "Native playback surface wiring pending"
+                        text: playbackViewModel && playbackViewModel.selectedMasterVideoPath.length > 0
+                            ? "Press Play to start native playback"
+                            : "Load a master video before playback"
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Button {
+                        text: "Play"
+                        enabled: playbackSurfaceController &&
+                            playbackViewModel &&
+                            playbackViewModel.selectedMasterVideoPath.length > 0 &&
+                            !playbackSurfaceController.playbackActive
+                        onClicked: playbackSurfaceController.startPlayback(
+                            playbackViewModel.selectedMasterVideoPath
+                        )
+                    }
+
+                    Button {
+                        text: "Stop"
+                        enabled: playbackSurfaceController && playbackSurfaceController.playbackActive
+                        onClicked: playbackSurfaceController.stopPlayback()
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        color: "#9fb1bf"
+                        text: playbackSurfaceController && playbackSurfaceController.playbackActive
+                            ? "Playback active"
+                            : "Playback stopped"
                     }
                 }
             }
@@ -176,4 +211,10 @@ WorkspaceShellLayout {
     onMasterVideoIdChanged: loadPlaybackRoute()
 
     Component.onCompleted: loadPlaybackRoute()
+
+    Component.onDestruction: {
+        if (playbackSurfaceController) {
+            playbackSurfaceController.stopPlayback()
+        }
+    }
 }
