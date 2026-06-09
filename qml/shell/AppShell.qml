@@ -14,9 +14,33 @@ ApplicationWindow {
     title: "Travis Inspection Workspace"
 
     Component {
+        id: projectRoute
+
+        ProjectPage {
+            navigation: appNavigation
+        }
+    }
+
+    Component {
+        id: projectWorkspaceRoute
+
+        ProjectWorkspacePage {
+            navigation: appNavigation
+        }
+    }
+
+    Component {
         id: inspectionWorkspaceRoute
 
         InspectionWorkspacePage {
+            navigation: appNavigation
+        }
+    }
+
+    Component {
+        id: playbackWorkspaceRoute
+
+        PlaybackWorkspacePage {
             navigation: appNavigation
         }
     }
@@ -25,13 +49,16 @@ ApplicationWindow {
         id: appNavigation
 
         stackView: appStack
+        projectPage: projectRoute
+        projectWorkspacePage: projectWorkspaceRoute
         inspectionWorkspacePage: inspectionWorkspaceRoute
+        playbackWorkspacePage: playbackWorkspaceRoute
     }
 
     StackView {
         id: appStack
 
         anchors.fill: parent
-        initialItem: inspectionWorkspaceRoute
+        initialItem: projectRoute
     }
 }

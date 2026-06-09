@@ -11,13 +11,22 @@ Item {
     id: root
 
     property var navigation
+    property int projectId: 0
 
     InspectionWorkspaceLayout {
         anchors.fill: parent
         title: "Inspection Workspace"
-        subtitle: "Native Qt/QML shell for preview, source selection, and recording control"
+        subtitle: projectId > 0
+            ? `Native inspection workspace for project ${projectId}`
+            : "Native Qt/QML shell for preview, source selection, and recording control"
 
         headerActions: [
+            Button {
+                text: "Projects"
+                visible: root.navigation
+                onClicked: root.navigation.goProjects()
+            },
+
             RecordingControls {
                 recordingViewModel: recordingViewModel
             }

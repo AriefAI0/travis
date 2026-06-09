@@ -6,26 +6,36 @@ QtObject {
     id: root
 
     property StackView stackView
+    property Component projectPage
+    property Component projectWorkspacePage
     property Component inspectionWorkspacePage
+    property Component playbackWorkspacePage
 
-    function goInspectionWorkspace() {
-        if (!stackView || !inspectionWorkspacePage) {
-            console.warn("[Navigation] Inspection workspace route is not ready")
+    function replaceWith(component, properties) {
+        if (!stackView || !component) {
+            console.warn("[Navigation] Route is not ready")
             return
         }
 
-        stackView.replace(inspectionWorkspacePage)
+        stackView.replace(component, properties || {})
     }
 
     function goProjects() {
-        console.warn("[Navigation] Project page is not implemented yet")
+        replaceWith(projectPage)
     }
 
     function goProject(projectId) {
-        console.warn("[Navigation] Project workspace is not implemented yet:", projectId)
+        replaceWith(projectWorkspacePage, { projectId: Number(projectId) || 0 })
+    }
+
+    function goInspectionWorkspace(projectId) {
+        replaceWith(inspectionWorkspacePage, { projectId: Number(projectId) || 0 })
     }
 
     function goPlayback(projectId, masterVideoId) {
-        console.warn("[Navigation] Playback workspace is not implemented yet:", projectId, masterVideoId)
+        replaceWith(playbackWorkspacePage, {
+            projectId: Number(projectId) || 0,
+            masterVideoId: Number(masterVideoId) || 0
+        })
     }
 }

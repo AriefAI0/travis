@@ -175,6 +175,10 @@ qt_add_qml_module(travis_app
     QML_FILES
         qml/Main.qml
         qml/layouts/InspectionWorkspaceLayout.qml
+        qml/layouts/WorkspaceShellLayout.qml
+        qml/pages/ProjectPage.qml
+        qml/pages/ProjectWorkspacePage.qml
+        qml/pages/PlaybackWorkspacePage.qml
         qml/shell/AppNavigation.qml
         qml/shell/AppShell.qml
 )
