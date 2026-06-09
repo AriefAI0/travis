@@ -9,15 +9,15 @@ Rectangle {
 
     property var playbackViewModel
 
-    radius: 10
+    radius: 0
     color: "#162029"
     border.color: "#31404d"
     border.width: 1
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 14
-        spacing: 10
+        anchors.margins: 8
+        spacing: 6
 
         Label {
             text: "Playback"

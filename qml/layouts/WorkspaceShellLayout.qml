@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// Provides a reusable framed workspace layout for project, playback, and utility pages.
+// Provides a reusable desktop workspace layout with line-divided panes.
 
 Item {
     id: root
@@ -14,26 +14,26 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#0d1117" }
-            GradientStop { position: 1.0; color: "#19222b" }
-        }
+        color: "#101820"
     }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 20
-        spacing: 16
+        spacing: 0
 
         RowLayout {
             Layout.fillWidth: true
+            Layout.leftMargin: 12
+            Layout.rightMargin: 12
+            Layout.topMargin: 8
+            Layout.bottomMargin: 8
 
             ColumnLayout {
                 spacing: 4
 
                 Label {
                     color: "#f6f8fb"
-                    font.pixelSize: 28
+                    font.pixelSize: 22
                     text: root.title
                 }
 
@@ -53,12 +53,18 @@ Item {
             }
         }
 
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: "#2b3844"
+        }
+
         ColumnLayout {
             id: bodySlot
 
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 12
+            spacing: 0
         }
     }
 }

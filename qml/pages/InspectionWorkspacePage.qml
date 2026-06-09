@@ -12,6 +12,11 @@ Item {
 
     property var navigation
     property int projectId: 0
+    property var recordingVm: recordingViewModel
+    property var playbackVm: playbackViewModel
+    property var previewController: previewSurfaceController
+    property var sourceDiscoveryVm: sourceDiscoveryViewModel
+    property var audioMeterVm: audioMeterViewModel
 
     function applyInspectionSession() {
         if (inspectionContextViewModel.sessionId > 0) {
@@ -48,7 +53,7 @@ Item {
             },
 
             RecordingControls {
-                recordingViewModel: recordingViewModel
+                recordingViewModel: root.recordingVm
             }
         ]
 
@@ -240,17 +245,17 @@ Item {
             PlaybackPanel {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 140
-                playbackViewModel: playbackViewModel
+                playbackViewModel: root.playbackVm
             }
         ]
 
         sideDock: [
             AvDock {
                 Layout.fillHeight: true
-                recordingViewModel: recordingViewModel
-                previewController: previewSurfaceController
-                sourceDiscoveryViewModel: sourceDiscoveryViewModel
-                audioMeterViewModel: audioMeterViewModel
+                recordingViewModel: root.recordingVm
+                previewController: root.previewController
+                sourceDiscoveryViewModel: root.sourceDiscoveryVm
+                audioMeterViewModel: root.audioMeterVm
             }
         ]
     }

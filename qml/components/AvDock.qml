@@ -14,8 +14,8 @@ Rectangle {
     property var sourceDiscoveryViewModel
     property var audioMeterViewModel
 
-    radius: 10
-    color: "#18212a"
+    radius: 0
+    color: "#121a22"
     border.color: "#30404d"
     border.width: 1
 
@@ -84,8 +84,8 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 14
-        spacing: 12
+        anchors.margins: 8
+        spacing: 8
 
         RowLayout {
             Layout.fillWidth: true
@@ -127,7 +127,7 @@ Rectangle {
 
                     Rectangle {
                         Layout.fillWidth: true
-                        radius: 8
+                        radius: 0
                         color: "#10171d"
                         border.color: "#2f3a44"
                         border.width: 1
@@ -135,8 +135,8 @@ Rectangle {
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: 10
-                            spacing: 8
+                            anchors.margins: 8
+                            spacing: 6
 
                             Label {
                                 color: "#eef3f7"
@@ -197,7 +197,7 @@ Rectangle {
                         delegate: Rectangle {
                             Layout.fillWidth: true
                             color: "#10171d"
-                            radius: 8
+                            radius: 0
                             border.color: "#2f3a44"
                             border.width: 1
                             implicitHeight: slotContent.implicitHeight + 18
@@ -206,8 +206,8 @@ Rectangle {
                                 id: slotContent
 
                                 anchors.fill: parent
-                                anchors.margins: 9
-                                spacing: 8
+                                anchors.margins: 8
+                                spacing: 6
 
                                 Label {
                                     color: "#eef3f7"
@@ -363,7 +363,7 @@ Rectangle {
     }
 
     Connections {
-        target: recordingViewModel
+        target: root.recordingViewModel || null
 
         function onAudioSlotsChanged() {
             root.syncAudioMeters()

@@ -10,7 +10,7 @@ Rectangle {
     color: "#06090d"
     border.color: "#22313e"
     border.width: 1
-    radius: 10
+    radius: 0
 
     Component.onCompleted: {
         if (playbackController) {

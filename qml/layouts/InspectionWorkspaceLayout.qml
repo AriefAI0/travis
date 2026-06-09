@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// Provides the reusable inspection workspace frame around header, status, body, and side dock.
+// Provides the reusable inspection workspace frame with desktop-style pane separators.
 
 Item {
     id: root
@@ -16,26 +16,26 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#0d1117" }
-            GradientStop { position: 1.0; color: "#19222b" }
-        }
+        color: "#101820"
     }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 20
-        spacing: 16
+        spacing: 0
 
         RowLayout {
             Layout.fillWidth: true
+            Layout.leftMargin: 12
+            Layout.rightMargin: 12
+            Layout.topMargin: 8
+            Layout.bottomMargin: 8
 
             ColumnLayout {
                 spacing: 4
 
                 Label {
                     text: root.title
-                    font.pixelSize: 28
+                    font.pixelSize: 22
                     color: "#f6f8fb"
                 }
 
@@ -54,17 +54,23 @@ Item {
             }
         }
 
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: "#2b3844"
+        }
+
         ColumnLayout {
             id: controlsSlot
 
             Layout.fillWidth: true
-            spacing: 8
+            spacing: 0
         }
 
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 16
+            spacing: 0
 
             ColumnLayout {
                 id: mainContentSlot
@@ -72,7 +78,13 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredWidth: 3
-                spacing: 12
+                spacing: 0
+            }
+
+            Rectangle {
+                Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                color: "#2b3844"
             }
 
             ColumnLayout {

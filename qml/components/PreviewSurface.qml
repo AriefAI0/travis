@@ -10,7 +10,7 @@ Rectangle {
     color: "#0f141a"
     border.color: "#3a4652"
     border.width: 1
-    radius: 10
+    radius: 0
 
     Component.onCompleted: {
         if (previewController) {

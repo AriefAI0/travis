@@ -262,7 +262,7 @@ Dialog {
         }
 
         Connections {
-            target: sourceDiscoveryViewModel
+            target: root.sourceDiscoveryViewModel || null
 
             function onVideoSourcesChanged() {
                 root.selectCurrentSource()

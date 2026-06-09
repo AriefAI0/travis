@@ -29,13 +29,13 @@ WorkspaceShellLayout {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 14
+            spacing: 0
 
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredWidth: 2
-                radius: 12
+                radius: 0
                 color: "#121922"
                 border.color: "#31404d"
                 border.width: 1
@@ -44,25 +44,25 @@ WorkspaceShellLayout {
                     id: projectList
 
                     anchors.fill: parent
-                    anchors.margins: 12
+                    anchors.margins: 0
                     clip: true
-                    spacing: 10
+                    spacing: 0
                     model: projectViewModel.projects
 
                     delegate: Rectangle {
                         width: ListView.view.width
-                        implicitHeight: projectCardContent.implicitHeight + 22
-                        radius: 10
-                        color: "#18222c"
-                        border.color: "#334657"
-                        border.width: 1
+                        implicitHeight: projectCardContent.implicitHeight + 16
+                        radius: 0
+                        color: index % 2 === 0 ? "#16202a" : "#121a22"
+                        border.color: "#263542"
+                        border.width: 0
 
                         ColumnLayout {
                             id: projectCardContent
 
                             anchors.fill: parent
-                            anchors.margins: 11
-                            spacing: 6
+                            anchors.margins: 8
+                            spacing: 4
 
                             Label {
                                 Layout.fillWidth: true
@@ -113,15 +113,15 @@ WorkspaceShellLayout {
             Rectangle {
                 Layout.preferredWidth: 340
                 Layout.fillHeight: true
-                radius: 12
+                radius: 0
                 color: "#101820"
                 border.color: "#31404d"
                 border.width: 1
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 14
-                    spacing: 10
+                    anchors.margins: 8
+                    spacing: 8
 
                     Label {
                         color: "#f4f7fa"

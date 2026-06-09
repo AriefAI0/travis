@@ -67,15 +67,15 @@ WorkspaceShellLayout {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 260
-            radius: 12
+            radius: 0
             color: "#101720"
             border.color: "#31404d"
             border.width: 1
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 18
-                spacing: 12
+                anchors.margins: 8
+                spacing: 8
 
                 Label {
                     color: "#f4f7fa"
@@ -143,15 +143,15 @@ WorkspaceShellLayout {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: 12
+            radius: 0
             color: "#121922"
             border.color: "#31404d"
             border.width: 1
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 18
-                spacing: 10
+                anchors.margins: 8
+                spacing: 8
 
                 RowLayout {
                     Layout.fillWidth: true

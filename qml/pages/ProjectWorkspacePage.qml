@@ -52,20 +52,20 @@ WorkspaceShellLayout {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 12
+            spacing: 0
 
             Rectangle {
                 Layout.preferredWidth: 280
                 Layout.fillHeight: true
-                radius: 12
+                radius: 0
                 color: "#101820"
                 border.color: "#31404d"
                 border.width: 1
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 10
+                    anchors.margins: 8
+                    spacing: 8
 
                     Label {
                         color: "#f4f7fa"
@@ -105,16 +105,16 @@ WorkspaceShellLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
-                        spacing: 8
+                        spacing: 0
                         model: projectWorkspaceViewModel.structureTree
 
                         delegate: Rectangle {
                             width: ListView.view.width
-                            implicitHeight: assetContent.implicitHeight + 18
-                            radius: 8
-                            color: "#18222c"
+                            implicitHeight: assetContent.implicitHeight + 14
+                            radius: 0
+                            color: index % 2 === 0 ? "#17212a" : "#121a22"
                             border.color: "#334657"
-                            border.width: 1
+                            border.width: 0
 
                             MouseArea {
                                 anchors.fill: parent
@@ -188,15 +188,15 @@ WorkspaceShellLayout {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                radius: 12
+                radius: 0
                 color: "#121922"
                 border.color: "#31404d"
                 border.width: 1
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 14
-                    spacing: 12
+                    anchors.margins: 8
+                    spacing: 8
 
                     Label {
                         color: "#f4f7fa"
@@ -259,23 +259,23 @@ WorkspaceShellLayout {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 180
                         clip: true
-                        spacing: 8
+                        spacing: 0
                         model: projectWorkspaceViewModel.masterVideos
 
                         delegate: Rectangle {
                             width: ListView.view.width
-                            implicitHeight: videoContent.implicitHeight + 18
-                            radius: 8
-                            color: "#18222c"
+                            implicitHeight: videoContent.implicitHeight + 14
+                            radius: 0
+                            color: index % 2 === 0 ? "#17212a" : "#121a22"
                             border.color: "#334657"
-                            border.width: 1
+                            border.width: 0
 
                             RowLayout {
                                 id: videoContent
 
                                 anchors.fill: parent
-                                anchors.margins: 9
-                                spacing: 10
+                                anchors.margins: 8
+                                spacing: 8
 
                                 ColumnLayout {
                                     Layout.fillWidth: true
@@ -436,15 +436,15 @@ WorkspaceShellLayout {
             Rectangle {
                 Layout.preferredWidth: 320
                 Layout.fillHeight: true
-                radius: 12
+                radius: 0
                 color: "#101820"
                 border.color: "#31404d"
                 border.width: 1
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 10
+                    anchors.margins: 8
+                    spacing: 8
 
                     Label {
                         color: "#f4f7fa"
@@ -456,16 +456,16 @@ WorkspaceShellLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
-                        spacing: 8
+                        spacing: 0
                         model: projectWorkspaceViewModel.sessions
 
                         delegate: Rectangle {
                             width: ListView.view.width
-                            implicitHeight: sessionContent.implicitHeight + 18
-                            radius: 8
-                            color: "#18222c"
+                            implicitHeight: sessionContent.implicitHeight + 14
+                            radius: 0
+                            color: index % 2 === 0 ? "#17212a" : "#121a22"
                             border.color: "#334657"
-                            border.width: 1
+                            border.width: 0
 
                             ColumnLayout {
                                 id: sessionContent
