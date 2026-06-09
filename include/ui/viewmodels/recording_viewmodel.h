@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QVariantList>
 
 #include <optional>
 #include <vector>
@@ -23,8 +24,10 @@ class RecordingViewModel : public QObject {
     Q_PROPERTY(QString sourceElement READ sourceElement WRITE setSourceElement NOTIFY sourceElementChanged)
     Q_PROPERTY(QString sourceLabel READ sourceLabel WRITE setSourceLabel NOTIFY sourceLabelChanged)
     Q_PROPERTY(QString outputPath READ outputPath WRITE setOutputPath NOTIFY outputPathChanged)
+    Q_PROPERTY(QVariantList audioSlots READ audioSlots NOTIFY audioSlotsChanged)
     Q_PROPERTY(bool recordingActive READ recordingActive NOTIFY recordingActiveChanged)
     Q_PROPERTY(bool paused READ paused NOTIFY pausedChanged)
+    Q_PROPERTY(qint64 activeClipId READ activeClipId NOTIFY activeClipChanged)
     Q_PROPERTY(qint64 activeMasterVideoId READ activeMasterVideoId NOTIFY activeMasterVideoChanged)
     Q_PROPERTY(QString activeMasterVideoPath READ activeMasterVideoPath NOTIFY activeMasterVideoChanged)
     Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
@@ -62,14 +65,25 @@ public:
 
     [[nodiscard]] QString outputPath() const;
     void setOutputPath(const QString& outputPath);
+    [[nodiscard]] QVariantList audioSlots() const;
 
     [[nodiscard]] bool recordingActive() const;
     [[nodiscard]] bool paused() const;
+    [[nodiscard]] qint64 activeClipId() const;
     [[nodiscard]] qint64 activeMasterVideoId() const;
     [[nodiscard]] QString activeMasterVideoPath() const;
     [[nodiscard]] QString statusMessage() const;
     [[nodiscard]] QString lastError() const;
 
+    // Applies basic inline device/source settings for one audio slot.
+    Q_INVOKABLE bool updateAudioSlotBasic(
+        int index,
+        const QString& deviceName,
+        const QString& devicePath,
+        const QString& sourceElement
+    );
+    // Applies advanced audio slot settings from the dialog state.
+    Q_INVOKABLE bool applyAdvancedAudioSlots(const QVariantList& audioSlots);
     Q_INVOKABLE bool startRecording();
     Q_INVOKABLE bool stopRecording();
     Q_INVOKABLE bool pauseRecording();
@@ -93,8 +107,10 @@ signals:
     void sourceElementChanged();
     void sourceLabelChanged();
     void outputPathChanged();
+    void audioSlotsChanged();
     void recordingActiveChanged();
     void pausedChanged();
+    void activeClipChanged();
     void activeMasterVideoChanged();
     void statusMessageChanged();
     void lastErrorChanged();
@@ -104,7 +120,24 @@ private:
     void setLastError(const QString& lastError);
     void syncFromActiveMasterVideo();
     void emitRecordingStateChanged();
+    bool syncAudioInputsFromSlots();
+    QVariantList buildAudioSlotVariantList() const;
 
+    struct AudioSlotState {
+        QString slotId;
+        QString displayName;
+        QString deviceName;
+        QString devicePath;
+        QString sourceElement;
+        int volume = 100;
+        bool mono = false;
+        int balance = 0;
+        int syncOffsetMs = 0;
+        QString monitoringMode = QStringLiteral("off");
+    };
+
+    QVector<AudioSlotState> audioSlotStates_;
+    std::vector<travis::media_engine::recording::RecordingAudioInput> audioInputs_;
     travis::application::recording::RecordingWorkflowService& recordingWorkflowService_;
     QString recordingId_;
     qint64 sessionId_ = 0;
@@ -117,6 +150,7 @@ private:
     QString outputPath_;
     bool recordingActive_ = false;
     bool paused_ = false;
+    qint64 activeClipId_ = 0;
     qint64 activeMasterVideoId_ = 0;
     QString activeMasterVideoPath_;
     QString statusMessage_;

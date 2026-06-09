@@ -75,10 +75,12 @@ add_library(travis_application
     include/application/playback/playback_workflow_service.h
     include/application/recording/recording_workflow_service.h
     include/application/recovery/recording_recovery_service.h
+    include/application/thumbnail/thumbnail_workflow_service.h
     src/app/app_context.cpp
     src/application/playback/playback_workflow_service.cpp
     src/application/recording/recording_workflow_service.cpp
     src/application/recovery/recording_recovery_service.cpp
+    src/application/thumbnail/thumbnail_workflow_service.cpp
 )
 
 target_include_directories(travis_application
@@ -96,9 +98,12 @@ target_link_libraries(travis_application
 add_library(travis_media_engine
     src/mediaEngine/core/media_runtime.cpp
     src/mediaEngine/core/video_sink_selector.cpp
+    src/mediaEngine/discovery/source_discovery.cpp
+    src/mediaEngine/metering/audio_meter_engine.cpp
     src/mediaEngine/pipeline/caps.cpp
     src/mediaEngine/pipeline/dynamic_pad.cpp
     src/mediaEngine/pipeline/errors.cpp
+    src/mediaEngine/playback/playback_engine.cpp
     src/mediaEngine/preview/preview_engine.cpp
     src/mediaEngine/recording/recording_engine.cpp
     src/mediaEngine/recording/pipeline/av_recording_pipeline.cpp
@@ -108,6 +113,7 @@ add_library(travis_media_engine
     src/mediaEngine/sources/device_capture/device_capture_video_source.cpp
     src/mediaEngine/sources/ndi/ndi_source_reference.cpp
     src/mediaEngine/sources/ndi/ndi_video_source.cpp
+    src/mediaEngine/thumbnail/thumbnail_generator.cpp
 )
 
 target_include_directories(travis_media_engine
@@ -136,12 +142,24 @@ target_link_libraries(travis_media_engine
 )
 
 add_library(travis_ui
+    include/ui/controllers/playback_surface_controller.h
     include/ui/controllers/preview_surface_controller.h
+    include/ui/viewmodels/audio_meter_viewmodel.h
+    include/ui/viewmodels/inspection_context_viewmodel.h
     include/ui/viewmodels/playback_viewmodel.h
+    include/ui/viewmodels/project_viewmodel.h
+    include/ui/viewmodels/project_workspace_viewmodel.h
     include/ui/viewmodels/recording_viewmodel.h
+    include/ui/viewmodels/source_discovery_viewmodel.h
+    src/ui/controllers/playback_surface_controller.cpp
     src/ui/controllers/preview_surface_controller.cpp
+    src/ui/viewmodels/audio_meter_viewmodel.cpp
+    src/ui/viewmodels/inspection_context_viewmodel.cpp
     src/ui/viewmodels/playback_viewmodel.cpp
+    src/ui/viewmodels/project_viewmodel.cpp
+    src/ui/viewmodels/project_workspace_viewmodel.cpp
     src/ui/viewmodels/recording_viewmodel.cpp
+    src/ui/viewmodels/source_discovery_viewmodel.cpp
 )
 
 target_include_directories(travis_ui
@@ -168,6 +186,22 @@ qt_add_qml_module(travis_app
     VERSION 1.0
     QML_FILES
         qml/Main.qml
+        qml/components/AvDock.qml
+        qml/components/PlaybackPanel.qml
+        qml/components/PlaybackSurface.qml
+        qml/components/PreviewSurface.qml
+        qml/components/RecordingControls.qml
+        qml/components/StatusBanner.qml
+        qml/dialogs/AdvancedAudioPropertiesDialog.qml
+        qml/dialogs/SourceSelectionDialog.qml
+        qml/layouts/InspectionWorkspaceLayout.qml
+        qml/layouts/WorkspaceShellLayout.qml
+        qml/pages/InspectionWorkspacePage.qml
+        qml/pages/ProjectPage.qml
+        qml/pages/ProjectWorkspacePage.qml
+        qml/pages/PlaybackWorkspacePage.qml
+        qml/shell/AppNavigation.qml
+        qml/shell/AppShell.qml
 )
 
 target_include_directories(travis_app

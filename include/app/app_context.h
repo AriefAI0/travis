@@ -23,6 +23,7 @@
 #include "application/playback/playback_workflow_service.h"
 #include "application/recording/recording_workflow_service.h"
 #include "application/recovery/recording_recovery_service.h"
+#include "application/thumbnail/thumbnail_workflow_service.h"
 #include "services/execution_service.h"
 #include "services/inspection_clip_service.h"
 #include "services/project_service.h"
@@ -67,6 +68,8 @@ public:
     travis::application::playback::PlaybackWorkflowService& playbackWorkflowService();
     // Returns the shared recording recovery service.
     travis::application::recovery::RecordingRecoveryService& recordingRecoveryService();
+    // Returns the shared thumbnail workflow service.
+    travis::application::thumbnail::ThumbnailWorkflowService& thumbnailWorkflowService();
 
     // Returns the shared project service.
     const travis::services::ProjectService& projectService() const;
@@ -90,6 +93,8 @@ public:
     const travis::application::playback::PlaybackWorkflowService& playbackWorkflowService() const;
     // Returns the shared recording recovery service.
     const travis::application::recovery::RecordingRecoveryService& recordingRecoveryService() const;
+    // Returns the shared thumbnail workflow service.
+    const travis::application::thumbnail::ThumbnailWorkflowService& thumbnailWorkflowService() const;
 
 private:
     travis::data::database::DatabaseBootstrap databaseBootstrap_;
@@ -120,6 +125,7 @@ private:
     std::optional<travis::application::recording::RecordingWorkflowService> recordingWorkflowService_;
     std::optional<travis::application::playback::PlaybackWorkflowService> playbackWorkflowService_;
     std::optional<travis::application::recovery::RecordingRecoveryService> recordingRecoveryService_;
+    std::optional<travis::application::thumbnail::ThumbnailWorkflowService> thumbnailWorkflowService_;
 
     QString lastError_;
 };

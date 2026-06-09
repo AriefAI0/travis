@@ -44,12 +44,47 @@ add_executable(app_context_test
     app/app_context_test.cpp
 )
 
+add_executable(project_workspace_viewmodel_test
+    ui/project_workspace_viewmodel_test.cpp
+    ../include/ui/viewmodels/project_workspace_viewmodel.h
+    ../src/ui/viewmodels/project_workspace_viewmodel.cpp
+    support/sqlite_test_helper.cpp
+)
+
+add_executable(inspection_context_viewmodel_test
+    ui/inspection_context_viewmodel_test.cpp
+    ../include/ui/viewmodels/inspection_context_viewmodel.h
+    ../src/ui/viewmodels/inspection_context_viewmodel.cpp
+    support/sqlite_test_helper.cpp
+)
+
+add_executable(playback_surface_controller_test
+    ui/playback_surface_controller_test.cpp
+)
+
 add_executable(media_runtime_test
     media/media_runtime_test.cpp
 )
 
+add_executable(source_discovery_test
+    media/source_discovery_test.cpp
+)
+
+add_executable(audio_meter_engine_test
+    media/audio_meter_engine_test.cpp
+)
+
+add_executable(playback_thumbnail_engine_test
+    media/playback_thumbnail_engine_test.cpp
+)
+
 add_executable(playback_workflow_test
     media/playback_workflow_test.cpp
+    support/sqlite_test_helper.cpp
+)
+
+add_executable(thumbnail_workflow_service_test
+    media/thumbnail_workflow_service_test.cpp
     support/sqlite_test_helper.cpp
 )
 
@@ -185,6 +220,53 @@ target_link_libraries(app_context_test
         travis_application
 )
 
+target_include_directories(project_workspace_viewmodel_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(project_workspace_viewmodel_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Sql
+        Qt6::Test
+        travis_data_database
+        travis_services
+)
+
+target_include_directories(inspection_context_viewmodel_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(inspection_context_viewmodel_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Sql
+        Qt6::Test
+        travis_data_database
+        travis_services
+)
+
+target_include_directories(playback_surface_controller_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(playback_surface_controller_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Quick
+        Qt6::Test
+        travis_ui
+)
+
 target_include_directories(media_runtime_test
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -199,6 +281,49 @@ target_link_libraries(media_runtime_test
         travis_media_engine
 )
 
+target_include_directories(source_discovery_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(source_discovery_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Test
+        travis_media_engine
+)
+
+target_include_directories(audio_meter_engine_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(audio_meter_engine_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Test
+        travis_media_engine
+)
+
+target_include_directories(playback_thumbnail_engine_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(playback_thumbnail_engine_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Quick
+        Qt6::Test
+        travis_media_engine
+)
+
 target_include_directories(playback_workflow_test
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -207,6 +332,23 @@ target_include_directories(playback_workflow_test
 )
 
 target_link_libraries(playback_workflow_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Sql
+        Qt6::Test
+        travis_data_database
+        travis_services
+        travis_application
+)
+
+target_include_directories(thumbnail_workflow_service_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(thumbnail_workflow_service_test
     PRIVATE
         Qt6::Core
         Qt6::Sql
@@ -249,6 +391,30 @@ add_test(
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
 add_test(
+    NAME source_discovery_test
+    COMMAND
+        ${CMAKE_COMMAND}
+            -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:source_discovery_test>
+            -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
+)
+add_test(
+    NAME audio_meter_engine_test
+    COMMAND
+        ${CMAKE_COMMAND}
+            -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:audio_meter_engine_test>
+            -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
+)
+add_test(
+    NAME playback_thumbnail_engine_test
+    COMMAND
+        ${CMAKE_COMMAND}
+            -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:playback_thumbnail_engine_test>
+            -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
+)
+add_test(
     NAME app_context_test
     COMMAND
         ${CMAKE_COMMAND}
@@ -256,5 +422,16 @@ add_test(
             -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
+add_test(NAME project_workspace_viewmodel_test COMMAND project_workspace_viewmodel_test)
+add_test(NAME inspection_context_viewmodel_test COMMAND inspection_context_viewmodel_test)
+add_test(
+    NAME playback_surface_controller_test
+    COMMAND
+        ${CMAKE_COMMAND}
+            -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:playback_surface_controller_test>
+            -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
+)
 add_test(NAME playback_workflow_test COMMAND playback_workflow_test)
+add_test(NAME thumbnail_workflow_service_test COMMAND thumbnail_workflow_service_test)
 add_test(NAME recording_recovery_service_test COMMAND recording_recovery_service_test)

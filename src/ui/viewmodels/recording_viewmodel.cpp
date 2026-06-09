@@ -1,5 +1,7 @@
 #include "ui/viewmodels/recording_viewmodel.h"
 
+#include <QVariantMap>
+
 // Bridges QML recording actions to the application workflow while keeping UI state explicit.
 
 namespace travis::ui::viewmodels {
@@ -9,7 +11,19 @@ RecordingViewModel::RecordingViewModel(
     QObject* parent
 )
     : QObject(parent)
-    , recordingWorkflowService_(recordingWorkflowService) {}
+    , recordingWorkflowService_(recordingWorkflowService) {
+    audioSlotStates_.append(AudioSlotState{
+        .slotId = QStringLiteral("audio-input-1"),
+        .displayName = QStringLiteral("Audio Input 1"),
+        .sourceElement = QStringLiteral("wasapi2src"),
+    });
+    audioSlotStates_.append(AudioSlotState{
+        .slotId = QStringLiteral("audio-input-2"),
+        .displayName = QStringLiteral("Audio Input 2"),
+        .sourceElement = QStringLiteral("wasapi2src"),
+    });
+    (void)syncAudioInputsFromSlots();
+}
 
 QString RecordingViewModel::recordingId() const {
     return recordingId_;
@@ -128,12 +142,20 @@ void RecordingViewModel::setOutputPath(const QString& outputPath) {
     emit outputPathChanged();
 }
 
+QVariantList RecordingViewModel::audioSlots() const {
+    return buildAudioSlotVariantList();
+}
+
 bool RecordingViewModel::recordingActive() const {
     return recordingActive_;
 }
 
 bool RecordingViewModel::paused() const {
     return paused_;
+}
+
+qint64 RecordingViewModel::activeClipId() const {
+    return activeClipId_;
 }
 
 qint64 RecordingViewModel::activeMasterVideoId() const {
@@ -152,7 +174,92 @@ QString RecordingViewModel::lastError() const {
     return lastError_;
 }
 
+bool RecordingViewModel::updateAudioSlotBasic(
+    int index,
+    const QString& deviceName,
+    const QString& devicePath,
+    const QString& sourceElement
+) {
+    if (index < 0 || index >= audioSlotStates_.size()) {
+        setLastError(QStringLiteral("Audio slot index is out of range"));
+        return false;
+    }
+
+    auto& slot = audioSlotStates_[index];
+    slot.deviceName = deviceName.trimmed();
+    slot.devicePath = devicePath.trimmed();
+    slot.sourceElement = sourceElement.trimmed().isEmpty() ? QStringLiteral("wasapi2src")
+                                                           : sourceElement.trimmed();
+
+    if (!syncAudioInputsFromSlots()) {
+        return false;
+    }
+
+    emit audioSlotsChanged();
+    setLastError(QString{});
+    setStatusMessage(QStringLiteral("Audio inputs updated"));
+    return true;
+}
+
+bool RecordingViewModel::applyAdvancedAudioSlots(const QVariantList& audioSlots) {
+    if (audioSlots.size() != audioSlotStates_.size()) {
+        setLastError(QStringLiteral("Advanced audio slot payload size does not match"));
+        return false;
+    }
+
+    QVector<AudioSlotState> nextSlots;
+    nextSlots.reserve(audioSlotStates_.size());
+
+    for (qsizetype index = 0; index < audioSlots.size(); ++index) {
+        const QVariantMap slotMap = audioSlots[index].toMap();
+        nextSlots.append(AudioSlotState{
+            .slotId = slotMap.value(QStringLiteral("slotId")).toString().trimmed(),
+            .displayName = slotMap.value(QStringLiteral("displayName")).toString().trimmed(),
+            .deviceName = slotMap.value(QStringLiteral("deviceName")).toString().trimmed(),
+            .devicePath = slotMap.value(QStringLiteral("devicePath")).toString().trimmed(),
+            .sourceElement = slotMap.value(QStringLiteral("sourceElement")).toString().trimmed(),
+            .volume = slotMap.value(QStringLiteral("volume")).toInt(),
+            .mono = slotMap.value(QStringLiteral("mono")).toBool(),
+            .balance = slotMap.value(QStringLiteral("balance")).toInt(),
+            .syncOffsetMs = slotMap.value(QStringLiteral("syncOffsetMs")).toInt(),
+            .monitoringMode = slotMap.value(QStringLiteral("monitoringMode")).toString().trimmed(),
+        });
+    }
+
+    audioSlotStates_ = nextSlots;
+
+    if (!syncAudioInputsFromSlots()) {
+        return false;
+    }
+
+    emit audioSlotsChanged();
+    setLastError(QString{});
+    setStatusMessage(QStringLiteral("Advanced audio properties updated"));
+    return true;
+}
+
 bool RecordingViewModel::startRecording() {
+    if (sourceKind_.trimmed().isEmpty()) {
+        setLastError(QStringLiteral("sourceKind is required"));
+        return false;
+    }
+
+    if (sourceName_.trimmed().isEmpty()) {
+        setLastError(QStringLiteral("sourceName is required"));
+        return false;
+    }
+
+    std::vector<travis::media_engine::recording::RecordingVideoInput> videoInputs;
+    videoInputs.push_back(travis::media_engine::recording::RecordingVideoInput{
+        .sourceKind = sourceKind_.trimmed().toStdString(),
+        .sourceName = sourceName_.trimmed().toStdString(),
+        .urlAddress = urlAddress_.trimmed().toStdString(),
+        .devicePath = devicePath_.trimmed().toStdString(),
+        .sourceElement = sourceElement_.trimmed().toStdString(),
+        .width = 1920,
+        .height = 1080,
+    });
+
     const auto result = recordingWorkflowService_.startRecording({
         .recordingId = recordingId_,
         .sessionId = sessionId_,
@@ -163,8 +270,8 @@ bool RecordingViewModel::startRecording() {
         .sourceElement = sourceElement_,
         .outputPath = outputPath_,
         .sourceLabel = sourceLabel_,
-        .videoInputs = {},
-        .audioInputs = {},
+        .videoInputs = videoInputs,
+        .audioInputs = audioInputs_,
     });
 
     if (!result.ok) {
@@ -245,6 +352,8 @@ bool RecordingViewModel::startInspectionClip(
             return false;
         }
 
+        activeClipId_ = clipLifecycle->clip.clipId;
+        emit activeClipChanged();
         setLastError(QString{});
         setStatusMessage(QStringLiteral("Inspection clip started"));
         return true;
@@ -266,6 +375,8 @@ bool RecordingViewModel::stopInspectionClip(qint64 clipId) {
             return false;
         }
 
+        activeClipId_ = 0;
+        emit activeClipChanged();
         setLastError(QString{});
         setStatusMessage(QStringLiteral("Inspection clip stopped"));
         return true;
@@ -283,6 +394,8 @@ bool RecordingViewModel::cancelInspectionClip(qint64 clipId) {
             return false;
         }
 
+        activeClipId_ = 0;
+        emit activeClipChanged();
         setLastError(QString{});
         setStatusMessage(QStringLiteral("Inspection clip cancelled"));
         return true;
@@ -326,6 +439,48 @@ void RecordingViewModel::syncFromActiveMasterVideo() {
 void RecordingViewModel::emitRecordingStateChanged() {
     emit recordingActiveChanged();
     emit pausedChanged();
+}
+
+bool RecordingViewModel::syncAudioInputsFromSlots() {
+    std::vector<travis::media_engine::recording::RecordingAudioInput> nextAudioInputs;
+    nextAudioInputs.reserve(static_cast<std::size_t>(audioSlotStates_.size()));
+
+    for (const auto& slot : audioSlotStates_) {
+        if (slot.deviceName.isEmpty() && slot.devicePath.isEmpty()) {
+            continue;
+        }
+
+        nextAudioInputs.push_back(travis::media_engine::recording::RecordingAudioInput{
+            .deviceName = slot.deviceName.toStdString(),
+            .devicePath = slot.devicePath.toStdString(),
+            .sourceElement = slot.sourceElement.toStdString(),
+        });
+    }
+
+    audioInputs_ = std::move(nextAudioInputs);
+    return true;
+}
+
+QVariantList RecordingViewModel::buildAudioSlotVariantList() const {
+    QVariantList audioSlotVariants;
+    audioSlotVariants.reserve(audioSlotStates_.size());
+
+    for (const auto& slot : audioSlotStates_) {
+        audioSlotVariants.append(QVariantMap{
+            {QStringLiteral("slotId"), slot.slotId},
+            {QStringLiteral("displayName"), slot.displayName},
+            {QStringLiteral("deviceName"), slot.deviceName},
+            {QStringLiteral("devicePath"), slot.devicePath},
+            {QStringLiteral("sourceElement"), slot.sourceElement},
+            {QStringLiteral("volume"), slot.volume},
+            {QStringLiteral("mono"), slot.mono},
+            {QStringLiteral("balance"), slot.balance},
+            {QStringLiteral("syncOffsetMs"), slot.syncOffsetMs},
+            {QStringLiteral("monitoringMode"), slot.monitoringMode},
+        });
+    }
+
+    return audioSlotVariants;
 }
 
 } // namespace travis::ui::viewmodels
