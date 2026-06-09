@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import "../components"
 import "../layouts"
 
 // Lists projects from the native project service and routes into a selected project workspace.
@@ -94,11 +95,13 @@ WorkspaceShellLayout {
 
                                 Button {
                                     text: "Open"
+                                    enabled: root.navigation && modelData.projectId > 0
                                     onClicked: root.navigation.goProject(modelData.projectId)
                                 }
 
                                 Button {
                                     text: "Inspect"
+                                    enabled: root.navigation && modelData.projectId > 0
                                     onClicked: root.navigation.goInspectionWorkspace(modelData.projectId)
                                 }
                             }
@@ -126,20 +129,16 @@ WorkspaceShellLayout {
                         text: "Create Project"
                     }
 
-                    Label {
+                    StatusBanner {
                         Layout.fillWidth: true
-                        visible: projectViewModel.lastError.length > 0
-                        color: "#ff9f9f"
-                        text: projectViewModel.lastError
-                        wrapMode: Text.Wrap
+                        message: projectViewModel.lastError
+                        error: true
                     }
 
-                    Label {
+                    StatusBanner {
                         Layout.fillWidth: true
-                        visible: projectViewModel.statusMessage.length > 0
-                        color: "#9fe0b0"
-                        text: projectViewModel.statusMessage
-                        wrapMode: Text.Wrap
+                        message: projectViewModel.statusMessage
+                        error: false
                     }
 
                     TextField {
@@ -168,7 +167,7 @@ WorkspaceShellLayout {
                     Button {
                         Layout.fillWidth: true
                         text: "Create"
-                        enabled: !projectViewModel.loading
+                        enabled: !projectViewModel.loading && titleField.text.trim().length > 0
                         onClicked: {
                             if (projectViewModel.createProject(
                                     titleField.text,

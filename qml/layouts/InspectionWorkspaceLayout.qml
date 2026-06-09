@@ -9,8 +9,6 @@ Item {
 
     property string title: "Inspection Workspace"
     property string subtitle: ""
-    property string errorMessage: ""
-    property string statusMessage: ""
     property alias headerActions: headerActionsSlot.data
     property alias controls: controlsSlot.data
     property alias mainContent: mainContentSlot.data

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import "../components"
 import "../layouts"
 
 // Shows the selected project overview, structure tree, and session list.
@@ -24,11 +25,13 @@ WorkspaceShellLayout {
     headerActions: [
         Button {
             text: "Projects"
+            enabled: root.navigation
             onClicked: root.navigation.goProjects()
         },
 
         Button {
             text: "Inspection"
+            enabled: root.navigation && root.projectId > 0
             onClicked: root.navigation.goInspectionWorkspace(root.projectId)
         },
 
@@ -40,12 +43,10 @@ WorkspaceShellLayout {
     ]
 
     body: [
-        Label {
+        StatusBanner {
             Layout.fillWidth: true
-            visible: projectWorkspaceViewModel.lastError.length > 0
-            color: "#ff9f9f"
-            text: projectWorkspaceViewModel.lastError
-            wrapMode: Text.Wrap
+            message: projectWorkspaceViewModel.lastError
+            error: true
         },
 
         RowLayout {
@@ -90,7 +91,9 @@ WorkspaceShellLayout {
 
                         Layout.fillWidth: true
                         text: "Add Asset"
-                        enabled: !projectWorkspaceViewModel.loading
+                        enabled: root.projectId > 0 &&
+                            !projectWorkspaceViewModel.loading &&
+                            assetNameField.text.trim().length > 0
                         onClicked: {
                             if (projectWorkspaceViewModel.createAsset(assetNameField.text)) {
                                 assetNameField.clear()
@@ -359,7 +362,9 @@ WorkspaceShellLayout {
 
                             Layout.fillWidth: true
                             text: "Add Component"
-                            enabled: root.selectedAssetId > 0 && !projectWorkspaceViewModel.loading
+                            enabled: root.selectedAssetId > 0 &&
+                                !projectWorkspaceViewModel.loading &&
+                                componentNameField.text.trim().length > 0
                             onClicked: {
                                 if (projectWorkspaceViewModel.createComponent(
                                         root.selectedAssetId,
@@ -408,7 +413,9 @@ WorkspaceShellLayout {
                         Button {
                             Layout.fillWidth: true
                             text: "Add Item"
-                            enabled: root.selectedComponentId > 0 && !projectWorkspaceViewModel.loading
+                            enabled: root.selectedComponentId > 0 &&
+                                !projectWorkspaceViewModel.loading &&
+                                itemLabelField.text.trim().length > 0
                             onClicked: {
                                 if (projectWorkspaceViewModel.createItem(
                                         root.selectedComponentId,

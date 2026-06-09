@@ -37,13 +37,13 @@ Item {
         headerActions: [
             Button {
                 text: "Projects"
-                visible: root.navigation
+                enabled: root.navigation
                 onClicked: root.navigation.goProjects()
             },
 
             Button {
                 text: "Project"
-                visible: root.navigation && root.projectId > 0
+                enabled: root.navigation && root.projectId > 0
                 onClicked: root.navigation.goProject(root.projectId)
             },
 
@@ -168,7 +168,9 @@ Item {
 
                 Button {
                     text: "Start Clip"
-                    enabled: root.canStartClip()
+                    enabled: root.canStartClip() &&
+                        inspectionTypeField.text.trim().length > 0 &&
+                        clipOutputPathField.text.trim().length > 0
                     onClicked: {
                         if (recordingViewModel.startInspectionClip(
                                 inspectionContextViewModel.selectedItemId,
@@ -263,6 +265,16 @@ Item {
         sourceDiscoveryViewModel.refreshAll()
         if (projectId > 0 && inspectionContextViewModel.loadProject(projectId)) {
             root.applyInspectionSession()
+        }
+    }
+
+    Component.onDestruction: {
+        if (previewSurfaceController) {
+            previewSurfaceController.stopPreview()
+        }
+
+        if (audioMeterViewModel) {
+            audioMeterViewModel.stopAll()
         }
     }
 
