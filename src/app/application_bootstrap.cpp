@@ -4,6 +4,7 @@
 #include <QQmlContext>
 
 #include "ui/controllers/preview_surface_controller.h"
+#include "ui/viewmodels/audio_meter_viewmodel.h"
 #include "ui/viewmodels/playback_viewmodel.h"
 #include "ui/viewmodels/recording_viewmodel.h"
 #include "ui/viewmodels/source_discovery_viewmodel.h"
@@ -28,6 +29,8 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
         new travis::ui::viewmodels::PlaybackViewModel(appContext_.playbackWorkflowService(), &engine);
     auto* sourceDiscoveryViewModel =
         new travis::ui::viewmodels::SourceDiscoveryViewModel(&engine);
+    auto* audioMeterViewModel =
+        new travis::ui::viewmodels::AudioMeterViewModel(&engine);
 
     engine.rootContext()->setContextProperty(
         QStringLiteral("previewSurfaceController"),
@@ -44,6 +47,10 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
     engine.rootContext()->setContextProperty(
         QStringLiteral("sourceDiscoveryViewModel"),
         sourceDiscoveryViewModel
+    );
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("audioMeterViewModel"),
+        audioMeterViewModel
     );
 
     lastError_.clear();

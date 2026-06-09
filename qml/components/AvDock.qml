@@ -12,6 +12,7 @@ Rectangle {
     property var recordingViewModel
     property var previewController
     property var sourceDiscoveryViewModel
+    property var audioMeterViewModel
 
     radius: 10
     color: "#18212a"
@@ -19,6 +20,16 @@ Rectangle {
     border.width: 1
 
     property int activeTabIndex: 0
+
+    function syncAudioMeters() {
+        if (!audioMeterViewModel || !recordingViewModel) {
+            return
+        }
+
+        audioMeterViewModel.syncAudioSlots(recordingViewModel.audioSlots, root.activeTabIndex === 1)
+    }
+
+    onActiveTabIndexChanged: syncAudioMeters()
 
     SourceSelectionDialog {
         id: sourceSelectionDialog
@@ -222,6 +233,47 @@ Rectangle {
                                     }
                                 }
 
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 4
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+
+                                        Label {
+                                            color: "#aebbc6"
+                                            text: "L"
+                                        }
+
+                                        ProgressBar {
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 100
+                                            value: audioMeterViewModel
+                                                ? (audioMeterViewModel.revision, audioMeterViewModel.leftLevel(modelData.slotId))
+                                                : 0
+                                        }
+                                    }
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+
+                                        Label {
+                                            color: "#aebbc6"
+                                            text: "R"
+                                        }
+
+                                        ProgressBar {
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 100
+                                            value: audioMeterViewModel
+                                                ? (audioMeterViewModel.revision, audioMeterViewModel.rightLevel(modelData.slotId))
+                                                : 0
+                                        }
+                                    }
+                                }
+
                                 RowLayout {
                                     Layout.fillWidth: true
 
@@ -253,6 +305,20 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    Connections {
+        target: recordingViewModel
+
+        function onAudioSlotsChanged() {
+            root.syncAudioMeters()
+        }
+    }
+
+    Component.onDestruction: {
+        if (audioMeterViewModel) {
+            audioMeterViewModel.stopAll()
         }
     }
 }

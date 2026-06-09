@@ -52,6 +52,10 @@ add_executable(source_discovery_test
     media/source_discovery_test.cpp
 )
 
+add_executable(audio_meter_engine_test
+    media/audio_meter_engine_test.cpp
+)
+
 add_executable(playback_workflow_test
     media/playback_workflow_test.cpp
     support/sqlite_test_helper.cpp
@@ -217,6 +221,20 @@ target_link_libraries(source_discovery_test
         travis_media_engine
 )
 
+target_include_directories(audio_meter_engine_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(audio_meter_engine_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Test
+        travis_media_engine
+)
+
 target_include_directories(playback_workflow_test
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -271,6 +289,14 @@ add_test(
     COMMAND
         ${CMAKE_COMMAND}
             -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:source_discovery_test>
+            -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
+)
+add_test(
+    NAME audio_meter_engine_test
+    COMMAND
+        ${CMAKE_COMMAND}
+            -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:audio_meter_engine_test>
             -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )

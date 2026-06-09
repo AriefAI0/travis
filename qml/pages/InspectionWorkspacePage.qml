@@ -136,6 +136,7 @@ Item {
                 recordingViewModel: recordingViewModel
                 previewController: previewSurfaceController
                 sourceDiscoveryViewModel: sourceDiscoveryViewModel
+                audioMeterViewModel: audioMeterViewModel
             }
         }
     }
