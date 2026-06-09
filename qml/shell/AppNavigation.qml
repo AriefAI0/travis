@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 
 // Centralizes route-like navigation actions for the Qt StackView shell.
 
