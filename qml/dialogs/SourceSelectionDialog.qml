@@ -16,6 +16,54 @@ Dialog {
     modal: true
     width: 480
 
+    function selectedDiscoveredSource() {
+        if (root.manualMode || discoveredVideoList.currentIndex < 0) {
+            return null
+        }
+
+        return discoveredVideoList.model[discoveredVideoList.currentIndex]
+    }
+
+    function sourceKindLabel(kind) {
+        if (kind === "ndi") {
+            return "NDI"
+        }
+
+        if (kind === "device-capture") {
+            return "Device Capture"
+        }
+
+        return kind && kind.length > 0 ? kind : "Unknown"
+    }
+
+    function sourceDetail(source) {
+        if (!source) {
+            return ""
+        }
+
+        if (source.kind === "ndi") {
+            return source.urlAddress && source.urlAddress.length > 0 ? source.urlAddress : "NDI network source"
+        }
+
+        if (source.devicePath && source.devicePath.length > 0) {
+            return source.devicePath
+        }
+
+        return source.sourceElement && source.sourceElement.length > 0 ? source.sourceElement : "Local capture device"
+    }
+
+    function canApply() {
+        if (!recordingViewModel) {
+            return false
+        }
+
+        if (!root.manualMode) {
+            return root.selectedDiscoveredSource() !== null
+        }
+
+        return sourceNameField.text.trim().length > 0
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 12
@@ -66,11 +114,30 @@ Dialog {
             visible: !root.manualMode
             model: sourceDiscoveryViewModel ? sourceDiscoveryViewModel.videoSources : []
 
-            delegate: RadioDelegate {
+            delegate: ItemDelegate {
                 width: ListView.view.width
-                text: modelData.name
                 checked: discoveredVideoList.currentIndex === index
+                highlighted: checked
                 onClicked: discoveredVideoList.currentIndex = index
+
+                contentItem: ColumnLayout {
+                    spacing: 2
+
+                    Label {
+                        Layout.fillWidth: true
+                        color: discoveredVideoList.currentIndex === index ? "#ffffff" : "#eef3f7"
+                        elide: Text.ElideRight
+                        text: modelData.name
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        color: discoveredVideoList.currentIndex === index ? "#cfe4f3" : "#9fb0be"
+                        elide: Text.ElideMiddle
+                        font.pixelSize: 12
+                        text: root.sourceKindLabel(modelData.kind) + " - " + root.sourceDetail(modelData)
+                    }
+                }
             }
         }
 
@@ -123,12 +190,46 @@ Dialog {
     }
 
     footer: DialogButtonBox {
+        id: dialogButtons
+
         standardButtons: DialogButtonBox.Cancel | DialogButtonBox.Ok
 
+        Component.onCompleted: standardButton(DialogButtonBox.Ok).enabled = root.canApply()
+
+        Connections {
+            target: root
+
+            function onManualModeChanged() {
+                dialogButtons.standardButton(DialogButtonBox.Ok).enabled = root.canApply()
+            }
+        }
+
+        Connections {
+            target: discoveredVideoList
+
+            function onCurrentIndexChanged() {
+                dialogButtons.standardButton(DialogButtonBox.Ok).enabled = root.canApply()
+            }
+        }
+
+        Connections {
+            target: sourceNameField
+
+            function onTextChanged() {
+                dialogButtons.standardButton(DialogButtonBox.Ok).enabled = root.canApply()
+            }
+        }
+
+        Connections {
+            target: sourceDiscoveryViewModel
+
+            function onVideoSourcesChanged() {
+                dialogButtons.standardButton(DialogButtonBox.Ok).enabled = root.canApply()
+            }
+        }
+
         onAccepted: {
-            const selectedSource = !root.manualMode && discoveredVideoList.currentIndex >= 0
-                ? discoveredVideoList.model[discoveredVideoList.currentIndex]
-                : null
+            const selectedSource = root.selectedDiscoveredSource()
 
             const sourceKind = selectedSource ? selectedSource.kind : sourceKindCombo.currentValue
             const sourceName = selectedSource ? selectedSource.name : sourceNameField.text

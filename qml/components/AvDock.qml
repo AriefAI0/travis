@@ -21,6 +21,42 @@ Rectangle {
 
     property int activeTabIndex: 0
 
+    function hasVideoSource() {
+        return recordingViewModel && recordingViewModel.sourceName.length > 0
+    }
+
+    function videoSourceKindLabel() {
+        if (!recordingViewModel || recordingViewModel.sourceKind.length === 0) {
+            return "Not configured"
+        }
+
+        if (recordingViewModel.sourceKind === "ndi") {
+            return "NDI"
+        }
+
+        if (recordingViewModel.sourceKind === "device-capture") {
+            return "Device Capture"
+        }
+
+        return recordingViewModel.sourceKind
+    }
+
+    function videoSourceDetail() {
+        if (!recordingViewModel) {
+            return ""
+        }
+
+        if (recordingViewModel.sourceKind === "ndi") {
+            return recordingViewModel.urlAddress.length > 0 ? recordingViewModel.urlAddress : "NDI network source"
+        }
+
+        if (recordingViewModel.devicePath.length > 0) {
+            return recordingViewModel.devicePath
+        }
+
+        return recordingViewModel.sourceElement.length > 0 ? recordingViewModel.sourceElement : "Local capture device"
+    }
+
     function syncAudioMeters() {
         if (!audioMeterViewModel || !recordingViewModel) {
             return
@@ -104,15 +140,16 @@ Rectangle {
 
                             Label {
                                 color: "#eef3f7"
-                                text: recordingViewModel && recordingViewModel.sourceName.length > 0
+                                font.pixelSize: 15
+                                text: root.hasVideoSource()
                                     ? recordingViewModel.sourceName
                                     : "No video source selected"
                             }
 
                             Label {
                                 color: "#9fb0be"
-                                text: recordingViewModel && recordingViewModel.sourceKind.length > 0
-                                    ? "Kind: " + recordingViewModel.sourceKind
+                                text: root.hasVideoSource()
+                                    ? root.videoSourceKindLabel() + " - " + root.videoSourceDetail()
                                     : "Open the source dialog to configure one"
                                 wrapMode: Text.Wrap
                             }
@@ -129,11 +166,13 @@ Rectangle {
                     RowLayout {
                         Button {
                             text: "Add Source"
+                            enabled: recordingViewModel && sourceDiscoveryViewModel
                             onClicked: sourceSelectionDialog.open()
                         }
 
                         Button {
                             text: "Stop Preview"
+                            enabled: previewController && root.hasVideoSource()
                             onClicked: previewController.stopPreview()
                         }
 
@@ -296,11 +335,13 @@ Rectangle {
 
                     Button {
                         text: "Advanced Audio Properties"
+                        enabled: recordingViewModel
                         onClicked: advancedAudioPropertiesDialog.open()
                     }
 
                     Button {
                         text: "Refresh Audio Devices"
+                        enabled: sourceDiscoveryViewModel && !sourceDiscoveryViewModel.loading
                         onClicked: sourceDiscoveryViewModel.refreshAudioSources()
                     }
                 }

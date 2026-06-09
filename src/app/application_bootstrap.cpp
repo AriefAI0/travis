@@ -41,6 +41,7 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
         new travis::ui::viewmodels::InspectionContextViewModel(
             appContext_.projectService(),
             appContext_.sessionService(),
+            appContext_.structureService(),
             &engine
         );
     auto* playbackViewModel =

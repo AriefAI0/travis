@@ -27,6 +27,7 @@ class RecordingViewModel : public QObject {
     Q_PROPERTY(QVariantList audioSlots READ audioSlots NOTIFY audioSlotsChanged)
     Q_PROPERTY(bool recordingActive READ recordingActive NOTIFY recordingActiveChanged)
     Q_PROPERTY(bool paused READ paused NOTIFY pausedChanged)
+    Q_PROPERTY(qint64 activeClipId READ activeClipId NOTIFY activeClipChanged)
     Q_PROPERTY(qint64 activeMasterVideoId READ activeMasterVideoId NOTIFY activeMasterVideoChanged)
     Q_PROPERTY(QString activeMasterVideoPath READ activeMasterVideoPath NOTIFY activeMasterVideoChanged)
     Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
@@ -68,6 +69,7 @@ public:
 
     [[nodiscard]] bool recordingActive() const;
     [[nodiscard]] bool paused() const;
+    [[nodiscard]] qint64 activeClipId() const;
     [[nodiscard]] qint64 activeMasterVideoId() const;
     [[nodiscard]] QString activeMasterVideoPath() const;
     [[nodiscard]] QString statusMessage() const;
@@ -108,6 +110,7 @@ signals:
     void audioSlotsChanged();
     void recordingActiveChanged();
     void pausedChanged();
+    void activeClipChanged();
     void activeMasterVideoChanged();
     void statusMessageChanged();
     void lastErrorChanged();
@@ -147,6 +150,7 @@ private:
     QString outputPath_;
     bool recordingActive_ = false;
     bool paused_ = false;
+    qint64 activeClipId_ = 0;
     qint64 activeMasterVideoId_ = 0;
     QString activeMasterVideoPath_;
     QString statusMessage_;

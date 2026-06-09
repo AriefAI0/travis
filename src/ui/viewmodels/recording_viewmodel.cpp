@@ -154,6 +154,10 @@ bool RecordingViewModel::paused() const {
     return paused_;
 }
 
+qint64 RecordingViewModel::activeClipId() const {
+    return activeClipId_;
+}
+
 qint64 RecordingViewModel::activeMasterVideoId() const {
     return activeMasterVideoId_;
 }
@@ -348,6 +352,8 @@ bool RecordingViewModel::startInspectionClip(
             return false;
         }
 
+        activeClipId_ = clipLifecycle->clip.clipId;
+        emit activeClipChanged();
         setLastError(QString{});
         setStatusMessage(QStringLiteral("Inspection clip started"));
         return true;
@@ -369,6 +375,8 @@ bool RecordingViewModel::stopInspectionClip(qint64 clipId) {
             return false;
         }
 
+        activeClipId_ = 0;
+        emit activeClipChanged();
         setLastError(QString{});
         setStatusMessage(QStringLiteral("Inspection clip stopped"));
         return true;
@@ -386,6 +394,8 @@ bool RecordingViewModel::cancelInspectionClip(qint64 clipId) {
             return false;
         }
 
+        activeClipId_ = 0;
+        emit activeClipChanged();
         setLastError(QString{});
         setStatusMessage(QStringLiteral("Inspection clip cancelled"));
         return true;

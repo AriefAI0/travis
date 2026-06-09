@@ -19,6 +19,14 @@ Item {
         }
     }
 
+    function canStartClip() {
+        return recordingViewModel.recordingActive &&
+            !recordingViewModel.paused &&
+            inspectionContextViewModel.sessionId > 0 &&
+            inspectionContextViewModel.selectedItemId > 0 &&
+            recordingViewModel.activeClipId === 0
+    }
+
     InspectionWorkspaceLayout {
         anchors.fill: parent
         title: "Inspection Workspace"
@@ -119,6 +127,61 @@ Item {
                         ? `Active session: ${inspectionContextViewModel.selectedSession.name}`
                         : "Create or select a session before recording"
                     elide: Text.ElideRight
+                }
+            },
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label {
+                    color: "#e3ebf3"
+                    text: "Inspection Item"
+                }
+
+                ComboBox {
+                    id: inspectionItemCombo
+
+                    Layout.preferredWidth: 360
+                    model: inspectionContextViewModel.inspectionItems
+                    textRole: "displayName"
+                    valueRole: "itemId"
+                    displayText: currentIndex >= 0 ? currentText : "Select item"
+                    enabled: inspectionContextViewModel.inspectionItems.length > 0
+
+                    onActivated: inspectionContextViewModel.selectItem(currentValue)
+                }
+
+                TextField {
+                    id: inspectionTypeField
+
+                    Layout.preferredWidth: 120
+                    text: "GVI"
+                    placeholderText: "Type"
+                }
+
+                TextField {
+                    id: clipOutputPathField
+
+                    Layout.fillWidth: true
+                    placeholderText: "Clip output path"
+                }
+
+                Button {
+                    text: "Start Clip"
+                    enabled: root.canStartClip()
+                    onClicked: {
+                        if (recordingViewModel.startInspectionClip(
+                                inspectionContextViewModel.selectedItemId,
+                                inspectionTypeField.text,
+                                clipOutputPathField.text
+                            )) {}
+                    }
+                }
+
+                Button {
+                    text: "Stop Clip"
+                    enabled: recordingViewModel.activeClipId > 0
+                    onClicked: recordingViewModel.stopInspectionClip(recordingViewModel.activeClipId)
                 }
             },
 
