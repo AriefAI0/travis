@@ -11,6 +11,7 @@ Rectangle {
 
     property var recordingViewModel
     property var previewController
+    property var sourceDiscoveryViewModel
 
     radius: 10
     color: "#18212a"
@@ -23,6 +24,7 @@ Rectangle {
         id: sourceSelectionDialog
         recordingViewModel: root.recordingViewModel
         previewController: root.previewController
+        sourceDiscoveryViewModel: root.sourceDiscoveryViewModel
     }
 
     AdvancedAudioPropertiesDialog {
@@ -162,16 +164,32 @@ Rectangle {
                                     text: modelData.displayName
                                 }
 
-                                TextField {
+                                ComboBox {
+                                    id: audioSourceCombo
+
                                     Layout.fillWidth: true
-                                    placeholderText: "Device name"
-                                    text: modelData.deviceName
-                                    onTextChanged: {
+                                    model: sourceDiscoveryViewModel ? sourceDiscoveryViewModel.audioSources : []
+                                    textRole: "name"
+                                    valueRole: "id"
+                                    displayText: currentIndex >= 0 ? currentText : "Select audio device"
+
+                                    Component.onCompleted: {
+                                        for (let sourceIndex = 0; sourceIndex < count; ++sourceIndex) {
+                                            if (model[sourceIndex].devicePath === modelData.devicePath &&
+                                                    model[sourceIndex].name === modelData.deviceName) {
+                                                currentIndex = sourceIndex
+                                                return
+                                            }
+                                        }
+                                    }
+
+                                    onActivated: {
+                                        const source = model[currentIndex]
                                         recordingViewModel.updateAudioSlotBasic(
                                             index,
-                                            text,
-                                            modelData.devicePath,
-                                            modelData.sourceElement
+                                            source.name,
+                                            source.devicePath,
+                                            source.sourceElement
                                         )
                                     }
                                 }
@@ -227,6 +245,11 @@ Rectangle {
                     Button {
                         text: "Advanced Audio Properties"
                         onClicked: advancedAudioPropertiesDialog.open()
+                    }
+
+                    Button {
+                        text: "Refresh Audio Devices"
+                        onClicked: sourceDiscoveryViewModel.refreshAudioSources()
                     }
                 }
             }

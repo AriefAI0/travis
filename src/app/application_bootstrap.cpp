@@ -6,6 +6,7 @@
 #include "ui/controllers/preview_surface_controller.h"
 #include "ui/viewmodels/playback_viewmodel.h"
 #include "ui/viewmodels/recording_viewmodel.h"
+#include "ui/viewmodels/source_discovery_viewmodel.h"
 
 // Publishes the first native preview controller to QML and keeps startup validation centralized.
 
@@ -25,6 +26,8 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
         new travis::ui::viewmodels::RecordingViewModel(appContext_.recordingWorkflowService(), &engine);
     auto* playbackViewModel =
         new travis::ui::viewmodels::PlaybackViewModel(appContext_.playbackWorkflowService(), &engine);
+    auto* sourceDiscoveryViewModel =
+        new travis::ui::viewmodels::SourceDiscoveryViewModel(&engine);
 
     engine.rootContext()->setContextProperty(
         QStringLiteral("previewSurfaceController"),
@@ -37,6 +40,10 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
     engine.rootContext()->setContextProperty(
         QStringLiteral("playbackViewModel"),
         playbackViewModel
+    );
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("sourceDiscoveryViewModel"),
+        sourceDiscoveryViewModel
     );
 
     lastError_.clear();

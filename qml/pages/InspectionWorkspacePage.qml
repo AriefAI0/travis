@@ -135,7 +135,10 @@ Item {
                 Layout.preferredWidth: 360
                 recordingViewModel: recordingViewModel
                 previewController: previewSurfaceController
+                sourceDiscoveryViewModel: sourceDiscoveryViewModel
             }
         }
     }
+
+    Component.onCompleted: sourceDiscoveryViewModel.refreshAll()
 }
