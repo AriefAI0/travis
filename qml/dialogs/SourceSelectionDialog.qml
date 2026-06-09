@@ -16,6 +16,34 @@ Dialog {
     modal: true
     width: 480
 
+    function openForCurrentSource() {
+        sourceLabelField.text = recordingViewModel ? recordingViewModel.sourceLabel : ""
+        root.manualMode = false
+
+        root.open()
+
+        if (sourceDiscoveryViewModel) {
+            sourceDiscoveryViewModel.refreshVideoSources()
+        }
+    }
+
+    function selectCurrentSource() {
+        if (!recordingViewModel || root.manualMode) {
+            return
+        }
+
+        for (let sourceIndex = 0; sourceIndex < discoveredVideoList.count; ++sourceIndex) {
+            const source = discoveredVideoList.model[sourceIndex]
+            if (source.kind === recordingViewModel.sourceKind &&
+                    source.name === recordingViewModel.sourceName &&
+                    source.devicePath === recordingViewModel.devicePath &&
+                    source.urlAddress === recordingViewModel.urlAddress) {
+                discoveredVideoList.currentIndex = sourceIndex
+                return
+            }
+        }
+    }
+
     function selectedDiscoveredSource() {
         if (root.manualMode || discoveredVideoList.currentIndex < 0) {
             return null
@@ -86,10 +114,18 @@ Dialog {
             }
 
             CheckBox {
-                text: "Manual"
+                text: "Custom"
                 checked: root.manualMode
                 onToggled: root.manualMode = checked
             }
+        }
+
+        Label {
+            Layout.fillWidth: true
+            visible: sourceDiscoveryViewModel && sourceDiscoveryViewModel.lastError.length > 0
+            color: "#e6b36a"
+            text: sourceDiscoveryViewModel ? sourceDiscoveryViewModel.lastError : ""
+            wrapMode: Text.Wrap
         }
 
         ComboBox {
@@ -145,7 +181,9 @@ Dialog {
             Layout.fillWidth: true
             visible: !root.manualMode && discoveredVideoList.count === 0
             color: "#d9b66d"
-            text: "No discovered video sources. Use Manual for custom input."
+            text: sourceDiscoveryViewModel && sourceDiscoveryViewModel.loading
+                ? "Looking for local and NDI video sources..."
+                : "No discovered video sources. Use Custom for manual input."
             wrapMode: Text.Wrap
         }
 
@@ -194,7 +232,10 @@ Dialog {
 
         standardButtons: DialogButtonBox.Cancel | DialogButtonBox.Ok
 
-        Component.onCompleted: standardButton(DialogButtonBox.Ok).enabled = root.canApply()
+        Component.onCompleted: {
+            standardButton(DialogButtonBox.Ok).text = "Apply Source"
+            standardButton(DialogButtonBox.Ok).enabled = root.canApply()
+        }
 
         Connections {
             target: root
@@ -224,6 +265,7 @@ Dialog {
             target: sourceDiscoveryViewModel
 
             function onVideoSourcesChanged() {
+                root.selectCurrentSource()
                 dialogButtons.standardButton(DialogButtonBox.Ok).enabled = root.canApply()
             }
         }

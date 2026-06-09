@@ -165,9 +165,9 @@ Rectangle {
 
                     RowLayout {
                         Button {
-                            text: "Add Source"
+                            text: root.hasVideoSource() ? "Change Source" : "Add Source"
                             enabled: recordingViewModel && sourceDiscoveryViewModel
-                            onClicked: sourceSelectionDialog.open()
+                            onClicked: sourceSelectionDialog.openForCurrentSource()
                         }
 
                         Button {
@@ -223,7 +223,7 @@ Rectangle {
                                     valueRole: "id"
                                     displayText: currentIndex >= 0 ? currentText : "Select audio device"
 
-                                    Component.onCompleted: {
+                                    function syncCurrentSource() {
                                         for (let sourceIndex = 0; sourceIndex < count; ++sourceIndex) {
                                             if (model[sourceIndex].devicePath === modelData.devicePath &&
                                                     model[sourceIndex].name === modelData.deviceName) {
@@ -231,7 +231,12 @@ Rectangle {
                                                 return
                                             }
                                         }
+
+                                        currentIndex = -1
                                     }
+
+                                    Component.onCompleted: syncCurrentSource()
+                                    onModelChanged: syncCurrentSource()
 
                                     onActivated: {
                                         const source = model[currentIndex]
@@ -343,6 +348,14 @@ Rectangle {
                         text: "Refresh Audio Devices"
                         enabled: sourceDiscoveryViewModel && !sourceDiscoveryViewModel.loading
                         onClicked: sourceDiscoveryViewModel.refreshAudioSources()
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        visible: sourceDiscoveryViewModel && sourceDiscoveryViewModel.lastError.length > 0
+                        color: "#e6b36a"
+                        text: sourceDiscoveryViewModel ? sourceDiscoveryViewModel.lastError : ""
+                        wrapMode: Text.Wrap
                     }
                 }
             }
