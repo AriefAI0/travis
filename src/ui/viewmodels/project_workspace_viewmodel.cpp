@@ -2,6 +2,8 @@
 
 #include <QVariantMap>
 
+#include <exception>
+
 // Builds a QML-friendly project workspace snapshot from native services.
 
 namespace travis::ui::viewmodels {
@@ -69,6 +71,15 @@ QVariantMap toSessionVariant(const travis::models::Session& session) {
         {QStringLiteral("createdAt"), session.createdAt},
         {QStringLiteral("updatedAt"), session.updatedAt},
     };
+}
+
+std::optional<QString> optionalTextFromInput(const QString& value) {
+    const QString trimmed = value.trimmed();
+    if (trimmed.isEmpty()) {
+        return std::nullopt;
+    }
+
+    return trimmed;
 }
 
 } // namespace
@@ -182,6 +193,95 @@ bool ProjectWorkspaceViewModel::loadProject(qint64 projectId) {
     setLoading(false);
     setLastError(QString{});
     return true;
+}
+
+bool ProjectWorkspaceViewModel::createAsset(const QString& name) {
+    if (projectId_ <= 0) {
+        setLastError(QStringLiteral("Load a project before creating an asset"));
+        return false;
+    }
+
+    try {
+        const auto asset = structureService_.createAsset({
+            .projectId = projectId_,
+            .name = name,
+        });
+
+        if (!asset.has_value()) {
+            setLastError(QStringLiteral("Failed to create asset"));
+            return false;
+        }
+
+        return loadProject(projectId_);
+    } catch (const std::exception& exception) {
+        setLastError(QString::fromUtf8(exception.what()));
+        return false;
+    }
+}
+
+bool ProjectWorkspaceViewModel::createComponent(qint64 assetId, const QString& name) {
+    if (assetId <= 0) {
+        setLastError(QStringLiteral("Select an asset before creating a component"));
+        return false;
+    }
+
+    if (projectId_ <= 0) {
+        setLastError(QStringLiteral("Load a project before creating a component"));
+        return false;
+    }
+
+    try {
+        const auto component = structureService_.createComponent({
+            .assetId = assetId,
+            .name = name,
+        });
+
+        if (!component.has_value()) {
+            setLastError(QStringLiteral("Failed to create component"));
+            return false;
+        }
+
+        return loadProject(projectId_);
+    } catch (const std::exception& exception) {
+        setLastError(QString::fromUtf8(exception.what()));
+        return false;
+    }
+}
+
+bool ProjectWorkspaceViewModel::createItem(
+    qint64 componentId,
+    const QString& itemLabel,
+    const QString& position,
+    int status
+) {
+    if (componentId <= 0) {
+        setLastError(QStringLiteral("Select a component before creating an item"));
+        return false;
+    }
+
+    if (projectId_ <= 0) {
+        setLastError(QStringLiteral("Load a project before creating an item"));
+        return false;
+    }
+
+    try {
+        const auto item = structureService_.createItem({
+            .componentId = componentId,
+            .itemLabel = itemLabel,
+            .position = optionalTextFromInput(position),
+            .status = status,
+        });
+
+        if (!item.has_value()) {
+            setLastError(QStringLiteral("Failed to create item"));
+            return false;
+        }
+
+        return loadProject(projectId_);
+    } catch (const std::exception& exception) {
+        setLastError(QString::fromUtf8(exception.what()));
+        return false;
+    }
 }
 
 void ProjectWorkspaceViewModel::setLoading(bool loading) {

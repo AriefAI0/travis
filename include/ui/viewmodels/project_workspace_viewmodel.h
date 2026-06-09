@@ -44,6 +44,14 @@ public:
     [[nodiscard]] QString lastError() const;
 
     Q_INVOKABLE bool loadProject(qint64 projectId);
+    Q_INVOKABLE bool createAsset(const QString& name);
+    Q_INVOKABLE bool createComponent(qint64 assetId, const QString& name);
+    Q_INVOKABLE bool createItem(
+        qint64 componentId,
+        const QString& itemLabel,
+        const QString& position,
+        int status
+    );
 
 signals:
     void projectChanged();

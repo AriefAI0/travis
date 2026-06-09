@@ -25,6 +25,8 @@ private slots:
 
     // Verifies selected-project overview state is loaded from native services.
     void loadProject_exposesProjectStructureAndSessions();
+    // Verifies structure creation actions refresh the loaded workspace snapshot.
+    void createStructureNodes_refreshesWorkspace();
 
 private:
     QString connectionName_;
@@ -101,6 +103,54 @@ void ProjectWorkspaceViewModelTest::loadProject_exposesProjectStructureAndSessio
     QCOMPARE(viewModel.itemCount(), 1);
     QCOMPARE(viewModel.structureTree().size(), 1);
     QCOMPARE(viewModel.sessions().size(), 1);
+}
+
+void ProjectWorkspaceViewModelTest::createStructureNodes_refreshesWorkspace() {
+    travis::data::repositories::ProjectRepository projectRepository(database_);
+    travis::data::repositories::AssetRepository assetRepository(database_);
+    travis::data::repositories::ComponentRepository componentRepository(database_);
+    travis::data::repositories::ItemRepository itemRepository(database_);
+    travis::data::repositories::SessionRepository sessionRepository(database_);
+    travis::data::repositories::SessionItemRepository sessionItemRepository(database_);
+
+    travis::services::ProjectService projectService(projectRepository);
+    travis::services::StructureService structureService(assetRepository, componentRepository, itemRepository);
+    travis::services::SessionService sessionService(sessionRepository, sessionItemRepository);
+
+    const auto project = projectService.createProject({
+        .title = QStringLiteral("Editable Workspace Project"),
+        .description = std::nullopt,
+        .documentId = std::nullopt,
+    });
+    QVERIFY(project.has_value());
+
+    travis::ui::viewmodels::ProjectWorkspaceViewModel viewModel(
+        projectService,
+        structureService,
+        sessionService
+    );
+
+    QVERIFY(viewModel.loadProject(project->projectId));
+    QVERIFY(viewModel.createAsset(QStringLiteral("Hull")));
+    QCOMPARE(viewModel.assetCount(), 1);
+
+    const QVariantMap asset = viewModel.structureTree().first().toMap();
+    const qint64 assetId = asset.value(QStringLiteral("assetId")).toLongLong();
+
+    QVERIFY(viewModel.createComponent(assetId, QStringLiteral("Anode")));
+    QCOMPARE(viewModel.componentCount(), 1);
+
+    const QVariantList components = viewModel.structureTree().first().toMap()
+        .value(QStringLiteral("components")).toList();
+    const qint64 componentId = components.first().toMap().value(QStringLiteral("componentId")).toLongLong();
+
+    QVERIFY(viewModel.createItem(
+        componentId,
+        QStringLiteral("ANODE-001"),
+        QStringLiteral("Port"),
+        1
+    ));
+    QCOMPARE(viewModel.itemCount(), 1);
 }
 
 } // namespace

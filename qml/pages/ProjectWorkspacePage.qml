@@ -11,6 +11,10 @@ WorkspaceShellLayout {
 
     property var navigation
     property int projectId: 0
+    property int selectedAssetId: 0
+    property int selectedComponentId: 0
+    property string selectedAssetName: ""
+    property string selectedComponentName: ""
 
     title: projectWorkspaceViewModel.project.title || "Project Workspace"
     subtitle: projectWorkspaceViewModel.loading
@@ -73,6 +77,27 @@ WorkspaceShellLayout {
                         text: `${projectWorkspaceViewModel.assetCount} assets | ${projectWorkspaceViewModel.componentCount} components | ${projectWorkspaceViewModel.itemCount} items`
                     }
 
+                    TextField {
+                        id: assetNameField
+
+                        Layout.fillWidth: true
+                        placeholderText: "New asset name"
+                        onAccepted: addAssetButton.clicked()
+                    }
+
+                    Button {
+                        id: addAssetButton
+
+                        Layout.fillWidth: true
+                        text: "Add Asset"
+                        enabled: !projectWorkspaceViewModel.loading
+                        onClicked: {
+                            if (projectWorkspaceViewModel.createAsset(assetNameField.text)) {
+                                assetNameField.clear()
+                            }
+                        }
+                    }
+
                     ListView {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -88,6 +113,16 @@ WorkspaceShellLayout {
                             border.color: "#334657"
                             border.width: 1
 
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    root.selectedAssetId = modelData.assetId
+                                    root.selectedAssetName = modelData.name
+                                    root.selectedComponentId = 0
+                                    root.selectedComponentName = ""
+                                }
+                            }
+
                             ColumnLayout {
                                 id: assetContent
 
@@ -97,7 +132,7 @@ WorkspaceShellLayout {
 
                                 Label {
                                     Layout.fillWidth: true
-                                    color: "#eef3f7"
+                                    color: root.selectedAssetId === modelData.assetId ? "#9fe0b0" : "#eef3f7"
                                     font.bold: true
                                     text: modelData.name
                                     elide: Text.ElideRight
@@ -113,9 +148,19 @@ WorkspaceShellLayout {
                                         Label {
                                             Layout.fillWidth: true
                                             leftPadding: 8
-                                            color: "#bfd0dd"
+                                            color: root.selectedComponentId === modelData.componentId ? "#9fe0b0" : "#bfd0dd"
                                             text: modelData.name
                                             elide: Text.ElideRight
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                onClicked: {
+                                                    root.selectedAssetId = modelData.assetId
+                                                    root.selectedAssetName = ""
+                                                    root.selectedComponentId = modelData.componentId
+                                                    root.selectedComponentName = modelData.name
+                                                }
+                                            }
                                         }
 
                                         Repeater {
@@ -191,24 +236,99 @@ WorkspaceShellLayout {
                     Label {
                         color: "#f4f7fa"
                         font.pixelSize: 18
-                        text: "Next actions"
+                        text: "Edit Structure"
                     }
 
-                    RowLayout {
-                        Button {
-                            text: "Start Inspection"
-                            enabled: root.projectId > 0
-                            onClicked: root.navigation.goInspectionWorkspace(root.projectId)
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        Label {
+                            Layout.fillWidth: true
+                            color: "#9fb1bf"
+                            text: root.selectedAssetId > 0
+                                ? `Selected asset: ${root.selectedAssetName.length > 0 ? root.selectedAssetName : root.selectedAssetId}`
+                                : "Select an asset to add components"
+                            wrapMode: Text.Wrap
+                        }
+
+                        TextField {
+                            id: componentNameField
+
+                            Layout.fillWidth: true
+                            placeholderText: "New component name"
+                            enabled: root.selectedAssetId > 0
+                            onAccepted: addComponentButton.clicked()
                         }
 
                         Button {
-                            text: "Back to Projects"
-                            onClicked: root.navigation.goProjects()
-                        }
-                    }
+                            id: addComponentButton
 
-                    Item {
-                        Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            text: "Add Component"
+                            enabled: root.selectedAssetId > 0 && !projectWorkspaceViewModel.loading
+                            onClicked: {
+                                if (projectWorkspaceViewModel.createComponent(
+                                        root.selectedAssetId,
+                                        componentNameField.text
+                                    )) {
+                                    componentNameField.clear()
+                                }
+                            }
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            color: "#9fb1bf"
+                            text: root.selectedComponentId > 0
+                                ? `Selected component: ${root.selectedComponentName.length > 0 ? root.selectedComponentName : root.selectedComponentId}`
+                                : "Select a component to add items"
+                            wrapMode: Text.Wrap
+                        }
+
+                        TextField {
+                            id: itemLabelField
+
+                            Layout.fillWidth: true
+                            placeholderText: "New item label"
+                            enabled: root.selectedComponentId > 0
+                        }
+
+                        TextField {
+                            id: itemPositionField
+
+                            Layout.fillWidth: true
+                            placeholderText: "Position"
+                            enabled: root.selectedComponentId > 0
+                        }
+
+                        SpinBox {
+                            id: itemStatusField
+
+                            Layout.fillWidth: true
+                            from: 0
+                            to: 100
+                            value: 0
+                            enabled: root.selectedComponentId > 0
+                        }
+
+                        Button {
+                            Layout.fillWidth: true
+                            text: "Add Item"
+                            enabled: root.selectedComponentId > 0 && !projectWorkspaceViewModel.loading
+                            onClicked: {
+                                if (projectWorkspaceViewModel.createItem(
+                                        root.selectedComponentId,
+                                        itemLabelField.text,
+                                        itemPositionField.text,
+                                        itemStatusField.value
+                                    )) {
+                                    itemLabelField.clear()
+                                    itemPositionField.clear()
+                                    itemStatusField.value = 0
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -282,6 +402,10 @@ WorkspaceShellLayout {
     ]
 
     onProjectIdChanged: {
+        root.selectedAssetId = 0
+        root.selectedComponentId = 0
+        root.selectedAssetName = ""
+        root.selectedComponentName = ""
         if (projectId > 0) {
             projectWorkspaceViewModel.loadProject(projectId)
         }
