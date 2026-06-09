@@ -83,6 +83,11 @@ add_executable(playback_workflow_test
     support/sqlite_test_helper.cpp
 )
 
+add_executable(thumbnail_workflow_service_test
+    media/thumbnail_workflow_service_test.cpp
+    support/sqlite_test_helper.cpp
+)
+
 add_executable(recording_recovery_service_test
     media/recording_recovery_service_test.cpp
     support/sqlite_test_helper.cpp
@@ -336,6 +341,23 @@ target_link_libraries(playback_workflow_test
         travis_application
 )
 
+target_include_directories(thumbnail_workflow_service_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(thumbnail_workflow_service_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Sql
+        Qt6::Test
+        travis_data_database
+        travis_services
+        travis_application
+)
+
 target_include_directories(recording_recovery_service_test
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -411,4 +433,5 @@ add_test(
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
 add_test(NAME playback_workflow_test COMMAND playback_workflow_test)
+add_test(NAME thumbnail_workflow_service_test COMMAND thumbnail_workflow_service_test)
 add_test(NAME recording_recovery_service_test COMMAND recording_recovery_service_test)

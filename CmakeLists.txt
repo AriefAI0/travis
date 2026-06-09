@@ -75,10 +75,12 @@ add_library(travis_application
     include/application/playback/playback_workflow_service.h
     include/application/recording/recording_workflow_service.h
     include/application/recovery/recording_recovery_service.h
+    include/application/thumbnail/thumbnail_workflow_service.h
     src/app/app_context.cpp
     src/application/playback/playback_workflow_service.cpp
     src/application/recording/recording_workflow_service.cpp
     src/application/recovery/recording_recovery_service.cpp
+    src/application/thumbnail/thumbnail_workflow_service.cpp
 )
 
 target_include_directories(travis_application
