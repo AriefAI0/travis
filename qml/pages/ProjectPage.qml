@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 import "../layouts"
 
-// Placeholder for the project dashboard route while project UI migration is pending.
+// Lists projects from the native project service and routes into a selected project workspace.
 
 WorkspaceShellLayout {
     id: root
@@ -12,32 +12,183 @@ WorkspaceShellLayout {
     property var navigation
 
     title: "Projects"
-    subtitle: "Project dashboard route placeholder. Project listing will be wired through the native service/viewmodel layer."
+    subtitle: projectViewModel.loading
+        ? "Loading projects..."
+        : "Select an existing inspection project or create a new one."
+
+    headerActions: [
+        Button {
+            text: "Refresh"
+            enabled: !projectViewModel.loading
+            onClicked: projectViewModel.refreshProjects()
+        }
+    ]
 
     body: [
-        Rectangle {
+        RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: 12
-            color: "#121922"
-            border.color: "#31404d"
-            border.width: 1
+            spacing: 14
 
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: 12
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 2
+                radius: 12
+                color: "#121922"
+                border.color: "#31404d"
+                border.width: 1
 
-                Label {
-                    color: "#eef3f7"
-                    font.pixelSize: 20
-                    text: "Project dashboard migration pending"
+                ListView {
+                    id: projectList
+
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    clip: true
+                    spacing: 10
+                    model: projectViewModel.projects
+
+                    delegate: Rectangle {
+                        width: ListView.view.width
+                        implicitHeight: projectCardContent.implicitHeight + 22
+                        radius: 10
+                        color: "#18222c"
+                        border.color: "#334657"
+                        border.width: 1
+
+                        ColumnLayout {
+                            id: projectCardContent
+
+                            anchors.fill: parent
+                            anchors.margins: 11
+                            spacing: 6
+
+                            Label {
+                                Layout.fillWidth: true
+                                color: "#f4f7fa"
+                                font.pixelSize: 18
+                                font.bold: true
+                                text: modelData.title
+                                elide: Text.ElideRight
+                            }
+
+                            Label {
+                                Layout.fillWidth: true
+                                color: "#9fb1bf"
+                                text: modelData.description.length > 0
+                                    ? modelData.description
+                                    : "No description"
+                                wrapMode: Text.Wrap
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+
+                                Label {
+                                    Layout.fillWidth: true
+                                    color: "#7f94a6"
+                                    text: modelData.documentId.length > 0
+                                        ? `Document: ${modelData.documentId}`
+                                        : "No document ID"
+                                }
+
+                                Button {
+                                    text: "Open"
+                                    onClicked: root.navigation.goProject(modelData.projectId)
+                                }
+
+                                Button {
+                                    text: "Inspect"
+                                    onClicked: root.navigation.goInspectionWorkspace(modelData.projectId)
+                                }
+                            }
+                        }
+                    }
                 }
+            }
 
-                Button {
-                    text: "Open Inspection Workspace"
-                    onClicked: root.navigation.goInspectionWorkspace(0)
+            Rectangle {
+                Layout.preferredWidth: 340
+                Layout.fillHeight: true
+                radius: 12
+                color: "#101820"
+                border.color: "#31404d"
+                border.width: 1
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 14
+                    spacing: 10
+
+                    Label {
+                        color: "#f4f7fa"
+                        font.pixelSize: 18
+                        text: "Create Project"
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        visible: projectViewModel.lastError.length > 0
+                        color: "#ff9f9f"
+                        text: projectViewModel.lastError
+                        wrapMode: Text.Wrap
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        visible: projectViewModel.statusMessage.length > 0
+                        color: "#9fe0b0"
+                        text: projectViewModel.statusMessage
+                        wrapMode: Text.Wrap
+                    }
+
+                    TextField {
+                        id: titleField
+
+                        Layout.fillWidth: true
+                        placeholderText: "Project title"
+                    }
+
+                    TextArea {
+                        id: descriptionField
+
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 90
+                        placeholderText: "Description"
+                        wrapMode: TextArea.Wrap
+                    }
+
+                    TextField {
+                        id: documentIdField
+
+                        Layout.fillWidth: true
+                        placeholderText: "Document ID"
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+                        text: "Create"
+                        enabled: !projectViewModel.loading
+                        onClicked: {
+                            if (projectViewModel.createProject(
+                                    titleField.text,
+                                    descriptionField.text,
+                                    documentIdField.text
+                                )) {
+                                titleField.clear()
+                                descriptionField.clear()
+                                documentIdField.clear()
+                            }
+                        }
+                    }
+
+                    Item {
+                        Layout.fillHeight: true
+                    }
                 }
             }
         }
     ]
+
+    Component.onCompleted: projectViewModel.refreshProjects()
 }
