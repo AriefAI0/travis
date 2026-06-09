@@ -44,6 +44,13 @@ add_executable(app_context_test
     app/app_context_test.cpp
 )
 
+add_executable(project_workspace_viewmodel_test
+    ui/project_workspace_viewmodel_test.cpp
+    ../include/ui/viewmodels/project_workspace_viewmodel.h
+    ../src/ui/viewmodels/project_workspace_viewmodel.cpp
+    support/sqlite_test_helper.cpp
+)
+
 add_executable(media_runtime_test
     media/media_runtime_test.cpp
 )
@@ -193,6 +200,22 @@ target_link_libraries(app_context_test
         travis_application
 )
 
+target_include_directories(project_workspace_viewmodel_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(project_workspace_viewmodel_test
+    PRIVATE
+        Qt6::Core
+        Qt6::Sql
+        Qt6::Test
+        travis_data_database
+        travis_services
+)
+
 target_include_directories(media_runtime_test
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -308,5 +331,6 @@ add_test(
             -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
+add_test(NAME project_workspace_viewmodel_test COMMAND project_workspace_viewmodel_test)
 add_test(NAME playback_workflow_test COMMAND playback_workflow_test)
 add_test(NAME recording_recovery_service_test COMMAND recording_recovery_service_test)

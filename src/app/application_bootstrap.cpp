@@ -7,6 +7,7 @@
 #include "ui/viewmodels/audio_meter_viewmodel.h"
 #include "ui/viewmodels/playback_viewmodel.h"
 #include "ui/viewmodels/project_viewmodel.h"
+#include "ui/viewmodels/project_workspace_viewmodel.h"
 #include "ui/viewmodels/recording_viewmodel.h"
 #include "ui/viewmodels/source_discovery_viewmodel.h"
 
@@ -28,6 +29,13 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
         new travis::ui::viewmodels::RecordingViewModel(appContext_.recordingWorkflowService(), &engine);
     auto* projectViewModel =
         new travis::ui::viewmodels::ProjectViewModel(appContext_.projectService(), &engine);
+    auto* projectWorkspaceViewModel =
+        new travis::ui::viewmodels::ProjectWorkspaceViewModel(
+            appContext_.projectService(),
+            appContext_.structureService(),
+            appContext_.sessionService(),
+            &engine
+        );
     auto* playbackViewModel =
         new travis::ui::viewmodels::PlaybackViewModel(appContext_.playbackWorkflowService(), &engine);
     auto* sourceDiscoveryViewModel =
@@ -42,6 +50,10 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
     engine.rootContext()->setContextProperty(
         QStringLiteral("projectViewModel"),
         projectViewModel
+    );
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("projectWorkspaceViewModel"),
+        projectWorkspaceViewModel
     );
     engine.rootContext()->setContextProperty(
         QStringLiteral("recordingViewModel"),
