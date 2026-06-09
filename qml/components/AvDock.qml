@@ -11,32 +11,6 @@ Rectangle {
 
     property var recordingViewModel
     property var previewController
-    property var audioSlots: [
-        {
-            slotId: "audio-input-1",
-            displayName: "Audio Input 1",
-            deviceName: "",
-            devicePath: "",
-            sourceElement: "wasapi2src",
-            volume: 100,
-            mono: false,
-            balance: 0,
-            syncOffsetMs: 0,
-            monitoringMode: "off"
-        },
-        {
-            slotId: "audio-input-2",
-            displayName: "Audio Input 2",
-            deviceName: "",
-            devicePath: "",
-            sourceElement: "wasapi2src",
-            volume: 100,
-            mono: false,
-            balance: 0,
-            syncOffsetMs: 0,
-            monitoringMode: "off"
-        }
-    ]
 
     radius: 10
     color: "#18212a"
@@ -44,28 +18,6 @@ Rectangle {
     border.width: 1
 
     property int activeTabIndex: 0
-
-    function updateAudioConfiguration() {
-        if (!recordingViewModel) {
-            return
-        }
-
-        const configuredAudioInputs = []
-        for (let index = 0; index < audioSlots.length; ++index) {
-            const slot = audioSlots[index]
-            if (slot.deviceName.length === 0 && slot.devicePath.length === 0) {
-                continue
-            }
-
-            configuredAudioInputs.push({
-                deviceName: slot.deviceName,
-                devicePath: slot.devicePath,
-                sourceElement: slot.sourceElement
-            })
-        }
-
-        recordingViewModel.configureAudioInputs(configuredAudioInputs)
-    }
 
     SourceSelectionDialog {
         id: sourceSelectionDialog
@@ -75,10 +27,9 @@ Rectangle {
 
     AdvancedAudioPropertiesDialog {
         id: advancedAudioPropertiesDialog
-        audioSlots: root.audioSlots
+        audioSlots: recordingViewModel ? recordingViewModel.audioSlots : []
         onApply: function(nextSlots) {
-            root.audioSlots = nextSlots
-            root.updateAudioConfiguration()
+            recordingViewModel.applyAdvancedAudioSlots(nextSlots)
         }
     }
 
@@ -189,7 +140,7 @@ Rectangle {
                     spacing: 10
 
                     Repeater {
-                        model: root.audioSlots
+                        model: recordingViewModel ? recordingViewModel.audioSlots : []
 
                         delegate: Rectangle {
                             Layout.fillWidth: true
@@ -216,21 +167,12 @@ Rectangle {
                                     placeholderText: "Device name"
                                     text: modelData.deviceName
                                     onTextChanged: {
-                                        const nextSlots = root.audioSlots.slice()
-                                        nextSlots[index] = {
-                                            slotId: nextSlots[index].slotId,
-                                            displayName: nextSlots[index].displayName,
-                                            deviceName: text,
-                                            devicePath: nextSlots[index].devicePath,
-                                            sourceElement: nextSlots[index].sourceElement,
-                                            volume: nextSlots[index].volume,
-                                            mono: nextSlots[index].mono,
-                                            balance: nextSlots[index].balance,
-                                            syncOffsetMs: nextSlots[index].syncOffsetMs,
-                                            monitoringMode: nextSlots[index].monitoringMode
-                                        }
-                                        root.audioSlots = nextSlots
-                                        root.updateAudioConfiguration()
+                                        recordingViewModel.updateAudioSlotBasic(
+                                            index,
+                                            text,
+                                            modelData.devicePath,
+                                            modelData.sourceElement
+                                        )
                                     }
                                 }
 
@@ -239,21 +181,12 @@ Rectangle {
                                     placeholderText: "Device path"
                                     text: modelData.devicePath
                                     onTextChanged: {
-                                        const nextSlots = root.audioSlots.slice()
-                                        nextSlots[index] = {
-                                            slotId: nextSlots[index].slotId,
-                                            displayName: nextSlots[index].displayName,
-                                            deviceName: nextSlots[index].deviceName,
-                                            devicePath: text,
-                                            sourceElement: nextSlots[index].sourceElement,
-                                            volume: nextSlots[index].volume,
-                                            mono: nextSlots[index].mono,
-                                            balance: nextSlots[index].balance,
-                                            syncOffsetMs: nextSlots[index].syncOffsetMs,
-                                            monitoringMode: nextSlots[index].monitoringMode
-                                        }
-                                        root.audioSlots = nextSlots
-                                        root.updateAudioConfiguration()
+                                        recordingViewModel.updateAudioSlotBasic(
+                                            index,
+                                            modelData.deviceName,
+                                            text,
+                                            modelData.sourceElement
+                                        )
                                     }
                                 }
 
@@ -262,21 +195,12 @@ Rectangle {
                                     placeholderText: "Source element"
                                     text: modelData.sourceElement
                                     onTextChanged: {
-                                        const nextSlots = root.audioSlots.slice()
-                                        nextSlots[index] = {
-                                            slotId: nextSlots[index].slotId,
-                                            displayName: nextSlots[index].displayName,
-                                            deviceName: nextSlots[index].deviceName,
-                                            devicePath: nextSlots[index].devicePath,
-                                            sourceElement: text,
-                                            volume: nextSlots[index].volume,
-                                            mono: nextSlots[index].mono,
-                                            balance: nextSlots[index].balance,
-                                            syncOffsetMs: nextSlots[index].syncOffsetMs,
-                                            monitoringMode: nextSlots[index].monitoringMode
-                                        }
-                                        root.audioSlots = nextSlots
-                                        root.updateAudioConfiguration()
+                                        recordingViewModel.updateAudioSlotBasic(
+                                            index,
+                                            modelData.deviceName,
+                                            modelData.devicePath,
+                                            text
+                                        )
                                     }
                                 }
 
