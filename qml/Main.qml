@@ -1,19 +1,7 @@
 import QtQuick
-import QtQuick.Controls
 
-import "pages"
+import "shell"
 
-// Loads the first native inspection workspace shell on top of the new Qt/C++ ui bridge.
+// Boots the Qt navigation shell while keeping app startup small and predictable.
 
-ApplicationWindow {
-    id: root
-
-    width: 1280
-    height: 720
-    visible: true
-    title: "Travis Inspection Workspace"
-
-    InspectionWorkspacePage {
-        anchors.fill: parent
-    }
-}
+AppShell {}
