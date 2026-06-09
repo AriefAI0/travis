@@ -27,16 +27,24 @@ QString SourceDiscoveryViewModel::lastError() const {
 
 bool SourceDiscoveryViewModel::refreshVideoSources() {
     setLoading(true);
-    const auto result = sourceDiscovery_.listDeviceCaptureSources();
+    const auto deviceResult = sourceDiscovery_.listDeviceCaptureSources();
+    const auto ndiResult = sourceDiscovery_.listNdiSources();
     setLoading(false);
 
-    if (!result.ok) {
-        setLastError(result.message);
+    if (!deviceResult.ok) {
+        setLastError(deviceResult.message);
         return false;
     }
 
-    videoSources_ = result.sources;
+    videoSources_ = deviceResult.sources;
+    videoSources_.append(ndiResult.sources);
     emit videoSourcesChanged();
+
+    if (!ndiResult.ok) {
+        setLastError(QStringLiteral("NDI discovery failed: %1").arg(ndiResult.message));
+        return false;
+    }
+
     setLastError(QString{});
     return true;
 }
