@@ -8,6 +8,7 @@
 #include "services/project_service.h"
 #include "services/session_service.h"
 #include "services/structure_service.h"
+#include "services/video_service.h"
 
 // Exposes selected-project workspace overview data to QML.
 
@@ -19,6 +20,7 @@ class ProjectWorkspaceViewModel : public QObject {
     Q_PROPERTY(QVariantMap project READ project NOTIFY projectChanged)
     Q_PROPERTY(QVariantList structureTree READ structureTree NOTIFY structureTreeChanged)
     Q_PROPERTY(QVariantList sessions READ sessions NOTIFY sessionsChanged)
+    Q_PROPERTY(QVariantList masterVideos READ masterVideos NOTIFY masterVideosChanged)
     Q_PROPERTY(int assetCount READ assetCount NOTIFY structureTreeChanged)
     Q_PROPERTY(int componentCount READ componentCount NOTIFY structureTreeChanged)
     Q_PROPERTY(int itemCount READ itemCount NOTIFY structureTreeChanged)
@@ -30,6 +32,7 @@ public:
         travis::services::ProjectService& projectService,
         travis::services::StructureService& structureService,
         travis::services::SessionService& sessionService,
+        travis::services::VideoService& videoService,
         QObject* parent = nullptr
     );
 
@@ -37,6 +40,7 @@ public:
     [[nodiscard]] QVariantMap project() const;
     [[nodiscard]] QVariantList structureTree() const;
     [[nodiscard]] QVariantList sessions() const;
+    [[nodiscard]] QVariantList masterVideos() const;
     [[nodiscard]] int assetCount() const;
     [[nodiscard]] int componentCount() const;
     [[nodiscard]] int itemCount() const;
@@ -57,6 +61,7 @@ signals:
     void projectChanged();
     void structureTreeChanged();
     void sessionsChanged();
+    void masterVideosChanged();
     void loadingChanged();
     void lastErrorChanged();
 
@@ -67,10 +72,12 @@ private:
     travis::services::ProjectService& projectService_;
     travis::services::StructureService& structureService_;
     travis::services::SessionService& sessionService_;
+    travis::services::VideoService& videoService_;
     qint64 projectId_ = 0;
     QVariantMap project_;
     QVariantList structureTree_;
     QVariantList sessions_;
+    QVariantList masterVideos_;
     int assetCount_ = 0;
     int componentCount_ = 0;
     int itemCount_ = 0;

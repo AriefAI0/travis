@@ -233,6 +233,99 @@ WorkspaceShellLayout {
                         color: "#31404d"
                     }
 
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        Label {
+                            color: "#f4f7fa"
+                            font.pixelSize: 18
+                            text: "Recordings"
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            color: "#9fb1bf"
+                            text: `${projectWorkspaceViewModel.masterVideos.length} video(s)`
+                        }
+                    }
+
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 180
+                        clip: true
+                        spacing: 8
+                        model: projectWorkspaceViewModel.masterVideos
+
+                        delegate: Rectangle {
+                            width: ListView.view.width
+                            implicitHeight: videoContent.implicitHeight + 18
+                            radius: 8
+                            color: "#18222c"
+                            border.color: "#334657"
+                            border.width: 1
+
+                            RowLayout {
+                                id: videoContent
+
+                                anchors.fill: parent
+                                anchors.margins: 9
+                                spacing: 10
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 3
+
+                                    Label {
+                                        Layout.fillWidth: true
+                                        color: "#eef3f7"
+                                        text: modelData.sourceName.length > 0
+                                            ? modelData.sourceName
+                                            : `Master Video #${modelData.masterVideoId}`
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Label {
+                                        Layout.fillWidth: true
+                                        color: "#91a6b7"
+                                        text: modelData.fileUrl
+                                        elide: Text.ElideMiddle
+                                    }
+
+                                    Label {
+                                        color: "#91a6b7"
+                                        text: `Session ${modelData.sessionId} | ${modelData.status}`
+                                    }
+                                }
+
+                                Button {
+                                    text: "Open Playback"
+                                    enabled: root.navigation && modelData.masterVideoId > 0
+                                    onClicked: root.navigation.goPlayback(
+                                        root.projectId,
+                                        modelData.masterVideoId
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        visible: projectWorkspaceViewModel.masterVideos.length === 0
+                        color: "#9fb1bf"
+                        text: "No recordings have been created for this project yet."
+                        wrapMode: Text.Wrap
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: "#31404d"
+                    }
+
                     Label {
                         color: "#f4f7fa"
                         font.pixelSize: 18

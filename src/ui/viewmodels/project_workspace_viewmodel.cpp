@@ -73,6 +73,19 @@ QVariantMap toSessionVariant(const travis::models::Session& session) {
     };
 }
 
+QVariantMap toMasterVideoVariant(const travis::models::MasterVideo& masterVideo) {
+    return QVariantMap{
+        {QStringLiteral("masterVideoId"), masterVideo.masterVideoId},
+        {QStringLiteral("sessionId"), masterVideo.sessionId},
+        {QStringLiteral("fileUrl"), masterVideo.fileUrl},
+        {QStringLiteral("thumbnailUrl"), masterVideo.thumbnailUrl.value_or(QString{})},
+        {QStringLiteral("startEpoch"), masterVideo.startEpoch},
+        {QStringLiteral("endEpoch"), masterVideo.endEpoch.has_value() ? QVariant(*masterVideo.endEpoch) : QVariant{}},
+        {QStringLiteral("status"), masterVideo.status},
+        {QStringLiteral("sourceName"), masterVideo.sourceName.value_or(QString{})},
+    };
+}
+
 std::optional<QString> optionalTextFromInput(const QString& value) {
     const QString trimmed = value.trimmed();
     if (trimmed.isEmpty()) {
@@ -88,12 +101,14 @@ ProjectWorkspaceViewModel::ProjectWorkspaceViewModel(
     travis::services::ProjectService& projectService,
     travis::services::StructureService& structureService,
     travis::services::SessionService& sessionService,
+    travis::services::VideoService& videoService,
     QObject* parent
 )
     : QObject(parent)
     , projectService_(projectService)
     , structureService_(structureService)
-    , sessionService_(sessionService) {}
+    , sessionService_(sessionService)
+    , videoService_(videoService) {}
 
 qint64 ProjectWorkspaceViewModel::projectId() const {
     return projectId_;
@@ -109,6 +124,10 @@ QVariantList ProjectWorkspaceViewModel::structureTree() const {
 
 QVariantList ProjectWorkspaceViewModel::sessions() const {
     return sessions_;
+}
+
+QVariantList ProjectWorkspaceViewModel::masterVideos() const {
+    return masterVideos_;
 }
 
 int ProjectWorkspaceViewModel::assetCount() const {
@@ -145,12 +164,14 @@ bool ProjectWorkspaceViewModel::loadProject(qint64 projectId) {
         project_.clear();
         structureTree_.clear();
         sessions_.clear();
+        masterVideos_.clear();
         assetCount_ = 0;
         componentCount_ = 0;
         itemCount_ = 0;
         emit projectChanged();
         emit structureTreeChanged();
         emit sessionsChanged();
+        emit masterVideosChanged();
         setLoading(false);
         setLastError(QStringLiteral("Project not found"));
         return false;
@@ -179,10 +200,22 @@ bool ProjectWorkspaceViewModel::loadProject(qint64 projectId) {
         nextSessions.append(toSessionVariant(session));
     }
 
+    QVariantList nextMasterVideos;
+    for (const auto& session : sessions) {
+        const QVector<travis::models::MasterVideo> sessionVideos =
+            videoService_.listMasterVideosBySessionId(session.sessionId);
+        nextMasterVideos.reserve(nextMasterVideos.size() + sessionVideos.size());
+
+        for (const auto& masterVideo : sessionVideos) {
+            nextMasterVideos.append(toMasterVideoVariant(masterVideo));
+        }
+    }
+
     projectId_ = projectId;
     project_ = toProjectVariant(*project);
     structureTree_ = nextStructureTree;
     sessions_ = nextSessions;
+    masterVideos_ = nextMasterVideos;
     assetCount_ = structureTree.size();
     componentCount_ = nextComponentCount;
     itemCount_ = nextItemCount;
@@ -190,6 +223,7 @@ bool ProjectWorkspaceViewModel::loadProject(qint64 projectId) {
     emit projectChanged();
     emit structureTreeChanged();
     emit sessionsChanged();
+    emit masterVideosChanged();
     setLoading(false);
     setLastError(QString{});
     return true;

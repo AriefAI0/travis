@@ -35,6 +35,7 @@ bool ApplicationBootstrap::initialize(QQmlApplicationEngine& engine) {
             appContext_.projectService(),
             appContext_.structureService(),
             appContext_.sessionService(),
+            appContext_.videoService(),
             &engine
         );
     auto* inspectionContextViewModel =

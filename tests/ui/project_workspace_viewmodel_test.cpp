@@ -6,9 +6,13 @@
 #include "data/repositories/project_repository.h"
 #include "data/repositories/session_item_repository.h"
 #include "data/repositories/session_repository.h"
+#include "data/repositories/master_video_repository.h"
+#include "data/repositories/timeline_thumbnail_repository.h"
+#include "data/repositories/video_clip_repository.h"
 #include "services/project_service.h"
 #include "services/session_service.h"
 #include "services/structure_service.h"
+#include "services/video_service.h"
 #include "support/sqlite_test_helper.h"
 #include "ui/viewmodels/project_workspace_viewmodel.h"
 
@@ -51,10 +55,18 @@ void ProjectWorkspaceViewModelTest::loadProject_exposesProjectStructureAndSessio
     travis::data::repositories::ItemRepository itemRepository(database_);
     travis::data::repositories::SessionRepository sessionRepository(database_);
     travis::data::repositories::SessionItemRepository sessionItemRepository(database_);
+    travis::data::repositories::MasterVideoRepository masterVideoRepository(database_);
+    travis::data::repositories::VideoClipRepository videoClipRepository(database_);
+    travis::data::repositories::TimelineThumbnailRepository timelineThumbnailRepository(database_);
 
     travis::services::ProjectService projectService(projectRepository);
     travis::services::StructureService structureService(assetRepository, componentRepository, itemRepository);
     travis::services::SessionService sessionService(sessionRepository, sessionItemRepository);
+    travis::services::VideoService videoService(
+        masterVideoRepository,
+        videoClipRepository,
+        timelineThumbnailRepository
+    );
 
     const auto project = projectService.createProject({
         .title = QStringLiteral("Workspace Project"),
@@ -89,10 +101,22 @@ void ProjectWorkspaceViewModelTest::loadProject_exposesProjectStructureAndSessio
     });
     QVERIFY(session.has_value());
 
+    const auto masterVideo = videoService.createMasterVideo({
+        .sessionId = session->sessionId,
+        .fileUrl = QStringLiteral("C:/recordings/master-1.mkv"),
+        .thumbnailUrl = std::nullopt,
+        .startEpoch = 1000,
+        .endEpoch = std::nullopt,
+        .status = QStringLiteral("recording"),
+        .sourceName = QStringLiteral("Camera 1"),
+    });
+    QVERIFY(masterVideo.has_value());
+
     travis::ui::viewmodels::ProjectWorkspaceViewModel viewModel(
         projectService,
         structureService,
-        sessionService
+        sessionService,
+        videoService
     );
 
     QVERIFY(viewModel.loadProject(project->projectId));
@@ -103,6 +127,11 @@ void ProjectWorkspaceViewModelTest::loadProject_exposesProjectStructureAndSessio
     QCOMPARE(viewModel.itemCount(), 1);
     QCOMPARE(viewModel.structureTree().size(), 1);
     QCOMPARE(viewModel.sessions().size(), 1);
+    QCOMPARE(viewModel.masterVideos().size(), 1);
+    QCOMPARE(
+        viewModel.masterVideos().first().toMap().value(QStringLiteral("fileUrl")).toString(),
+        QStringLiteral("C:/recordings/master-1.mkv")
+    );
 }
 
 void ProjectWorkspaceViewModelTest::createStructureNodes_refreshesWorkspace() {
@@ -112,10 +141,18 @@ void ProjectWorkspaceViewModelTest::createStructureNodes_refreshesWorkspace() {
     travis::data::repositories::ItemRepository itemRepository(database_);
     travis::data::repositories::SessionRepository sessionRepository(database_);
     travis::data::repositories::SessionItemRepository sessionItemRepository(database_);
+    travis::data::repositories::MasterVideoRepository masterVideoRepository(database_);
+    travis::data::repositories::VideoClipRepository videoClipRepository(database_);
+    travis::data::repositories::TimelineThumbnailRepository timelineThumbnailRepository(database_);
 
     travis::services::ProjectService projectService(projectRepository);
     travis::services::StructureService structureService(assetRepository, componentRepository, itemRepository);
     travis::services::SessionService sessionService(sessionRepository, sessionItemRepository);
+    travis::services::VideoService videoService(
+        masterVideoRepository,
+        videoClipRepository,
+        timelineThumbnailRepository
+    );
 
     const auto project = projectService.createProject({
         .title = QStringLiteral("Editable Workspace Project"),
@@ -127,7 +164,8 @@ void ProjectWorkspaceViewModelTest::createStructureNodes_refreshesWorkspace() {
     travis::ui::viewmodels::ProjectWorkspaceViewModel viewModel(
         projectService,
         structureService,
-        sessionService
+        sessionService,
+        videoService
     );
 
     QVERIFY(viewModel.loadProject(project->projectId));
