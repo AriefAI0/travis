@@ -1,6 +1,6 @@
 import QtQuick
 
-// Wraps the Qt-owned preview item and binds it to the preview controller automatically.
+// Marks the preview rectangle used by the native D3D11 video overlay.
 
 Rectangle {
     id: root

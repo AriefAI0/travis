@@ -1,11 +1,17 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQuickWindow>
+
+#include <gst/gst.h>
 
 #include "app/application_bootstrap.h"
 
 // Starts the first Qt/QML shell used to validate native preview integration.
 
 int main(int argc, char* argv[]) {
+    gst_init(nullptr, nullptr);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 

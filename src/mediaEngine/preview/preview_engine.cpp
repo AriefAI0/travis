@@ -3,8 +3,10 @@
 #include "mediaEngine/core/video_sink_selector.h"
 
 #include <QQuickItem>
+#include <QQuickWindow>
+#include <gst/video/videooverlay.h>
 
-// Reuses shared source sessions and attaches the selected Qt/QML sink branch for live preview.
+// Reuses shared source sessions and attaches a native D3D11 video sink branch for live preview.
 
 namespace travis::media_engine::preview {
 
@@ -121,43 +123,42 @@ PreviewResult PreviewEngine::createPreviewBranch(
     preview.sinkKind = sinkSelection.kind;
     preview.sink = sinkSelection.sink;
 
-    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
-        preview.glUpload = gst_element_factory_make("glupload", nullptr);
-        preview.glColorConvert = gst_element_factory_make("glcolorconvert", nullptr);
-    }
-
     if (preview.queue == nullptr || preview.videoConvert == nullptr ||
         preview.sink == nullptr) {
         return PreviewResult{false, "Failed to create preview branch elements"};
     }
 
-    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl &&
-        (preview.glUpload == nullptr || preview.glColorConvert == nullptr)) {
-        return PreviewResult{false, "Failed to create the OpenGL preview path"};
+    QQuickWindow* targetWindow = targetItem->window();
+    if (targetWindow == nullptr) {
+        return PreviewResult{false, "Preview item is not attached to a window"};
     }
 
     g_object_set(preview.queue, "leaky", 2, "max-size-buffers", 2, nullptr);
-    g_object_set(preview.sink, "widget", targetItem, "force-aspect-ratio", TRUE, nullptr);
+    g_object_set(preview.sink, "force-aspect-ratio", TRUE, nullptr);
 
-    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
-        gst_bin_add_many(
-            GST_BIN(session.pipeline),
-            preview.queue,
-            preview.videoConvert,
-            preview.glUpload,
-            preview.glColorConvert,
-            preview.sink,
-            nullptr
-        );
-    } else {
-        gst_bin_add_many(
-            GST_BIN(session.pipeline),
-            preview.queue,
-            preview.videoConvert,
-            preview.sink,
-            nullptr
-        );
-    }
+    gst_video_overlay_set_window_handle(
+        GST_VIDEO_OVERLAY(preview.sink),
+        static_cast<guintptr>(targetWindow->winId())
+    );
+
+    const QPointF scenePosition = targetItem->mapToScene(QPointF(0, 0));
+    const qreal devicePixelRatio = targetWindow->devicePixelRatio();
+    gst_video_overlay_set_render_rectangle(
+        GST_VIDEO_OVERLAY(preview.sink),
+        static_cast<gint>(scenePosition.x() * devicePixelRatio),
+        static_cast<gint>(scenePosition.y() * devicePixelRatio),
+        static_cast<gint>(targetItem->width() * devicePixelRatio),
+        static_cast<gint>(targetItem->height() * devicePixelRatio)
+    );
+    gst_video_overlay_expose(GST_VIDEO_OVERLAY(preview.sink));
+
+    gst_bin_add_many(
+        GST_BIN(session.pipeline),
+        preview.queue,
+        preview.videoConvert,
+        preview.sink,
+        nullptr
+    );
 
     const GstStateChangeReturn sinkReadyResult = gst_element_set_state(preview.sink, GST_STATE_READY);
     if (sinkReadyResult == GST_STATE_CHANGE_FAILURE) {
@@ -165,18 +166,7 @@ PreviewResult PreviewEngine::createPreviewBranch(
     }
 
     bool linkOk = false;
-    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
-        linkOk = gst_element_link_many(
-            preview.queue,
-            preview.videoConvert,
-            preview.glUpload,
-            preview.glColorConvert,
-            preview.sink,
-            nullptr
-        );
-    } else {
-        linkOk = gst_element_link_many(preview.queue, preview.videoConvert, preview.sink, nullptr);
-    }
+    linkOk = gst_element_link_many(preview.queue, preview.videoConvert, preview.sink, nullptr);
 
     if (!linkOk) {
         return PreviewResult{false, "Failed to link preview branch elements"};
@@ -190,12 +180,6 @@ PreviewResult PreviewEngine::createPreviewBranch(
 
     bool syncOk = gst_element_sync_state_with_parent(preview.queue) &&
         gst_element_sync_state_with_parent(preview.videoConvert);
-
-    if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
-        syncOk = syncOk &&
-            gst_element_sync_state_with_parent(preview.glUpload) &&
-            gst_element_sync_state_with_parent(preview.glColorConvert);
-    }
 
     syncOk = syncOk && gst_element_sync_state_with_parent(preview.sink);
 
@@ -218,12 +202,6 @@ PreviewResult PreviewEngine::clearActivePreview() {
     if (preview.sink != nullptr) {
         gst_element_set_state(preview.sink, GST_STATE_NULL);
     }
-    if (preview.glColorConvert != nullptr) {
-        gst_element_set_state(preview.glColorConvert, GST_STATE_NULL);
-    }
-    if (preview.glUpload != nullptr) {
-        gst_element_set_state(preview.glUpload, GST_STATE_NULL);
-    }
     if (preview.videoConvert != nullptr) {
         gst_element_set_state(preview.videoConvert, GST_STATE_NULL);
     }
@@ -232,25 +210,13 @@ PreviewResult PreviewEngine::clearActivePreview() {
     }
 
     if (preview.session != nullptr) {
-        if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
-            gst_bin_remove_many(
-                GST_BIN(preview.session->pipeline),
-                preview.queue,
-                preview.videoConvert,
-                preview.glUpload,
-                preview.glColorConvert,
-                preview.sink,
-                nullptr
-            );
-        } else {
-            gst_bin_remove_many(
-                GST_BIN(preview.session->pipeline),
-                preview.queue,
-                preview.videoConvert,
-                preview.sink,
-                nullptr
-            );
-        }
+        gst_bin_remove_many(
+            GST_BIN(preview.session->pipeline),
+            preview.queue,
+            preview.videoConvert,
+            preview.sink,
+            nullptr
+        );
         sessionManager_.releaseSession(*preview.session);
     }
 

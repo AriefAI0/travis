@@ -1,6 +1,6 @@
 import QtQuick
 
-// Wraps the Qt-owned playback item and binds it to the playback controller automatically.
+// Marks the playback rectangle used by the native D3D11 video overlay.
 
 Rectangle {
     id: root

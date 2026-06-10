@@ -4,6 +4,8 @@ set(TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../runtime/g
 set(TRAVIS_GSTREAMER_TEST_BIN_DIR "${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}/bin")
 set(TRAVIS_GSTREAMER_TEST_PLUGIN_DIR "${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}/lib/gstreamer-1.0")
 set(TRAVIS_GSTREAMER_TEST_RUNNER "${CMAKE_CURRENT_SOURCE_DIR}/support/run_with_gstreamer_runtime.cmake")
+get_target_property(TRAVIS_QT_CORE_LOCATION Qt6::Core LOCATION)
+get_filename_component(TRAVIS_QT_TEST_BIN_DIR "${TRAVIS_QT_CORE_LOCATION}" DIRECTORY)
 
 add_executable(project_service_test
     services/project_service_test.cpp
@@ -388,6 +390,7 @@ add_test(
         ${CMAKE_COMMAND}
             -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:media_runtime_test>
             -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -DTRAVIS_QT_BIN_DIR=${TRAVIS_QT_TEST_BIN_DIR}
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
 add_test(
@@ -396,6 +399,7 @@ add_test(
         ${CMAKE_COMMAND}
             -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:source_discovery_test>
             -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -DTRAVIS_QT_BIN_DIR=${TRAVIS_QT_TEST_BIN_DIR}
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
 add_test(
@@ -404,6 +408,7 @@ add_test(
         ${CMAKE_COMMAND}
             -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:audio_meter_engine_test>
             -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -DTRAVIS_QT_BIN_DIR=${TRAVIS_QT_TEST_BIN_DIR}
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
 add_test(
@@ -412,6 +417,7 @@ add_test(
         ${CMAKE_COMMAND}
             -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:playback_thumbnail_engine_test>
             -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -DTRAVIS_QT_BIN_DIR=${TRAVIS_QT_TEST_BIN_DIR}
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
 add_test(
@@ -420,6 +426,7 @@ add_test(
         ${CMAKE_COMMAND}
             -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:app_context_test>
             -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -DTRAVIS_QT_BIN_DIR=${TRAVIS_QT_TEST_BIN_DIR}
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
 add_test(NAME project_workspace_viewmodel_test COMMAND project_workspace_viewmodel_test)
@@ -430,6 +437,7 @@ add_test(
         ${CMAKE_COMMAND}
             -DTRAVIS_TEST_EXECUTABLE=$<TARGET_FILE:playback_surface_controller_test>
             -DTRAVIS_GSTREAMER_RUNTIME_ROOT=${TRAVIS_GSTREAMER_TEST_RUNTIME_ROOT}
+            -DTRAVIS_QT_BIN_DIR=${TRAVIS_QT_TEST_BIN_DIR}
             -P ${TRAVIS_GSTREAMER_TEST_RUNNER}
 )
 add_test(NAME playback_workflow_test COMMAND playback_workflow_test)

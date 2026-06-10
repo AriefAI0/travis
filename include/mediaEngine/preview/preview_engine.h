@@ -12,7 +12,7 @@
 
 class QQuickItem;
 
-// Owns the native preview branch that connects shared media sessions to the selected Qt/QML sink.
+// Owns the native preview branch that connects shared media sessions to the selected native video sink.
 
 namespace travis::media_engine::preview {
 
@@ -45,10 +45,8 @@ private:
         travis::media_engine::session::MediaSourceSession* session = nullptr;
         GstElement* queue = nullptr;
         travis::media_engine::core::PreviewVideoSinkKind sinkKind =
-            travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl;
+            travis::media_engine::core::PreviewVideoSinkKind::D3d11Video;
         GstElement* videoConvert = nullptr;
-        GstElement* glUpload = nullptr;
-        GstElement* glColorConvert = nullptr;
         GstElement* sink = nullptr;
         travis::media_engine::session::AttachedSessionBranch branch;
     };

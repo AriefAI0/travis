@@ -2,32 +2,23 @@
 
 #include <iostream>
 
-// Selects the preferred Qt/QML preview sink for the current runtime.
+// Selects the preferred native Windows preview sink for the current runtime.
 
 namespace travis::media_engine::core {
 
 PreviewVideoSinkSelection createPreviewVideoSink() {
-    if (GstElement* d3d11Sink = gst_element_factory_make("qml6d3d11sink", nullptr); d3d11Sink != nullptr) {
-        std::cerr << "[PreviewSink] Selected qml6d3d11sink\n";
+    if (GstElement* d3d11Sink = gst_element_factory_make("d3d11videosink", nullptr); d3d11Sink != nullptr) {
+        std::cerr << "[PreviewSink] Selected d3d11videosink\n";
         return PreviewVideoSinkSelection{
-            .kind = PreviewVideoSinkKind::Qml6D3d11,
+            .kind = PreviewVideoSinkKind::D3d11Video,
             .sink = d3d11Sink,
         };
     }
 
-    std::cerr << "[PreviewSink] qml6d3d11sink unavailable, trying qml6glsink\n";
-
-    GstElement* glSink = gst_element_factory_make("qml6glsink", nullptr);
-    if (glSink != nullptr) {
-        std::cerr << "[PreviewSink] Selected qml6glsink\n";
-    } else {
-        std::cerr << "[PreviewSink] qml6glsink unavailable — both Qt QML sinks missing."
-                     " Check GST_PLUGIN_PATH and that libgstqml6.dll is present in the GStreamer plugin directory.\n";
-    }
-
+    std::cerr << "[PreviewSink] d3d11videosink unavailable. Check the GStreamer d3d11 plugin runtime.\n";
     return PreviewVideoSinkSelection{
-        .kind = PreviewVideoSinkKind::Qml6Gl,
-        .sink = glSink,
+        .kind = PreviewVideoSinkKind::D3d11Video,
+        .sink = nullptr,
     };
 }
 

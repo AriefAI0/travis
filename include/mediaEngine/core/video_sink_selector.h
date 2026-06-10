@@ -2,13 +2,12 @@
 
 #include <gst/gst.h>
 
-// Selects the Qt/QML-native preview sink strategy for the embedded preview engine.
+// Selects the native Windows video sink strategy for the embedded media engine.
 
 namespace travis::media_engine::core {
 
 enum class PreviewVideoSinkKind {
-    Qml6D3d11,
-    Qml6Gl,
+    D3d11Video,
 };
 
 struct PreviewVideoSinkSelection {

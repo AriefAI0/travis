@@ -1,9 +1,12 @@
 #include "mediaEngine/playback/playback_engine.h"
 
 #include <QFileInfo>
+#include <QQuickItem>
+#include <QQuickWindow>
 #include <QUrl>
+#include <gst/video/videooverlay.h>
 
-// Builds a native playback pipeline for QML-owned video surfaces.
+// Builds a native playback pipeline for Qt window-backed video surfaces.
 
 namespace travis::media_engine::playback {
 
@@ -21,7 +24,17 @@ PlaybackResult PlaybackEngine::startFilePlayback(const std::string& filePath, QO
     }
 
     if (qmlVideoItem == nullptr) {
-        return PlaybackResult{false, "QML video item is required for native playback"};
+        return PlaybackResult{false, "Playback video item is required for native playback"};
+    }
+
+    auto* targetItem = qobject_cast<QQuickItem*>(qmlVideoItem);
+    if (targetItem == nullptr) {
+        return PlaybackResult{false, "Playback video item must be a QQuickItem"};
+    }
+
+    QQuickWindow* targetWindow = targetItem->window();
+    if (targetWindow == nullptr) {
+        return PlaybackResult{false, "Playback video item is not attached to a window"};
     }
 
     const QFileInfo fileInfo(QString::fromStdString(filePath));
@@ -48,8 +61,21 @@ PlaybackResult PlaybackEngine::startFilePlayback(const std::string& filePath, QO
     videoSink_ = sinkSelection.sink;
     activeSinkKind_ = sinkSelection.kind;
 
-    // qml6d3d11sink and qml6glsink both render into a QML-owned item through the widget property.
-    g_object_set(videoSink_, "widget", qmlVideoItem, nullptr);
+    gst_video_overlay_set_window_handle(
+        GST_VIDEO_OVERLAY(videoSink_),
+        static_cast<guintptr>(targetWindow->winId())
+    );
+
+    const QPointF scenePosition = targetItem->mapToScene(QPointF(0, 0));
+    const qreal devicePixelRatio = targetWindow->devicePixelRatio();
+    gst_video_overlay_set_render_rectangle(
+        GST_VIDEO_OVERLAY(videoSink_),
+        static_cast<gint>(scenePosition.x() * devicePixelRatio),
+        static_cast<gint>(scenePosition.y() * devicePixelRatio),
+        static_cast<gint>(targetItem->width() * devicePixelRatio),
+        static_cast<gint>(targetItem->height() * devicePixelRatio)
+    );
+    gst_video_overlay_expose(GST_VIDEO_OVERLAY(videoSink_));
 
     const QUrl fileUrl = QUrl::fromLocalFile(fileInfo.absoluteFilePath());
     g_object_set(

@@ -7,7 +7,7 @@
 
 #include "mediaEngine/core/video_sink_selector.h"
 
-// Owns direct GStreamer playback using the same Qt/QML sink selection as preview.
+// Owns direct GStreamer playback using the same native sink selection as preview.
 
 namespace travis::media_engine::playback {
 
@@ -36,7 +36,7 @@ private:
     GstElement* pipeline_ = nullptr;
     GstElement* videoSink_ = nullptr;
     travis::media_engine::core::PreviewVideoSinkKind activeSinkKind_ =
-        travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl;
+        travis::media_engine::core::PreviewVideoSinkKind::D3d11Video;
     bool running_ = false;
 };
 
