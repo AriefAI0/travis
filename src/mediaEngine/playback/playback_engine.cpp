@@ -1,9 +1,12 @@
 #include "mediaEngine/playback/playback_engine.h"
 
+#include "mediaEngine/core/native_video_overlay.h"
+
 #include <QFileInfo>
+#include <QQuickItem>
 #include <QUrl>
 
-// Builds a native playback pipeline for QML-owned video surfaces.
+// Builds a native playback pipeline for Qt window-backed video surfaces.
 
 namespace travis::media_engine::playback {
 
@@ -21,7 +24,12 @@ PlaybackResult PlaybackEngine::startFilePlayback(const std::string& filePath, QO
     }
 
     if (qmlVideoItem == nullptr) {
-        return PlaybackResult{false, "QML video item is required for native playback"};
+        return PlaybackResult{false, "Playback video item is required for native playback"};
+    }
+
+    auto* targetItem = qobject_cast<QQuickItem*>(qmlVideoItem);
+    if (targetItem == nullptr) {
+        return PlaybackResult{false, "Playback video item must be a QQuickItem"};
     }
 
     const QFileInfo fileInfo(QString::fromStdString(filePath));
@@ -47,9 +55,14 @@ PlaybackResult PlaybackEngine::startFilePlayback(const std::string& filePath, QO
 
     videoSink_ = sinkSelection.sink;
     activeSinkKind_ = sinkSelection.kind;
+    playbackItem_ = targetItem;
 
-    // qml6d3d11sink and qml6glsink both render into a QML-owned item through the widget property.
-    g_object_set(videoSink_, "widget", qmlVideoItem, nullptr);
+    const auto geometryResult =
+        travis::media_engine::core::syncNativeVideoOverlayGeometry(videoSink_, targetItem);
+    if (!geometryResult.ok) {
+        resetPipeline();
+        return PlaybackResult{false, geometryResult.message};
+    }
 
     const QUrl fileUrl = QUrl::fromLocalFile(fileInfo.absoluteFilePath());
     g_object_set(
@@ -75,6 +88,18 @@ PlaybackResult PlaybackEngine::stopPlayback() {
     return resetPipeline();
 }
 
+PlaybackResult PlaybackEngine::syncPlaybackGeometry() {
+    if (!running_) {
+        return PlaybackResult{true, "No active playback to sync"};
+    }
+
+    const auto syncResult = travis::media_engine::core::syncNativeVideoOverlayGeometry(
+        videoSink_,
+        playbackItem_.data()
+    );
+    return PlaybackResult{syncResult.ok, syncResult.message};
+}
+
 bool PlaybackEngine::isRunning() const {
     return running_;
 }
@@ -91,6 +116,7 @@ PlaybackResult PlaybackEngine::resetPipeline() {
         gst_object_unref(pipeline_);
         pipeline_ = nullptr;
         videoSink_ = nullptr;
+        playbackItem_.clear();
     }
 
     return PlaybackResult{true, "Playback stopped"};

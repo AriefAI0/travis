@@ -15,6 +15,16 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_PREFIX_PATH": "C:/Qt/6.8.3/mingw_64"
       }
+    },
+    {
+      "name": "msvc-debug",
+      "displayName": "MSVC Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/msvc-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.8.3/msvc2022_64"
+      }
     }
   ],
   "buildPresets": [
@@ -22,6 +32,11 @@
       "name": "mingw-debug",
       "displayName": "Build MinGW Debug",
       "configurePreset": "mingw-debug"
+    },
+    {
+      "name": "msvc-debug",
+      "displayName": "Build MSVC Debug",
+      "configurePreset": "msvc-debug"
     }
   ],
   "testPresets": [
@@ -29,6 +44,14 @@
       "name": "mingw-debug",
       "displayName": "Test MinGW Debug",
       "configurePreset": "mingw-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "msvc-debug",
+      "displayName": "Test MSVC Debug",
+      "configurePreset": "msvc-debug",
       "output": {
         "outputOnFailure": true
       }

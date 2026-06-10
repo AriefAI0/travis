@@ -1,6 +1,6 @@
 import QtQuick
 
-// Wraps the Qt-owned preview item and binds it to the preview controller automatically.
+// Marks the preview rectangle used by the native D3D11 video overlay.
 
 Rectangle {
     id: root
@@ -12,9 +12,47 @@ Rectangle {
     border.width: 1
     radius: 0
 
-    Component.onCompleted: {
+    function syncGeometryNow() {
         if (previewController) {
-            previewController.previewItem = root
+            previewController.syncPreviewGeometry()
         }
+    }
+
+    function syncGeometry() {
+        syncGeometryNow()
+        geometryFollowupTimer.restart()
+    }
+
+    Window.onWindowChanged: {
+        if (Window.window && previewController) {
+            previewController.previewItem = root
+            syncGeometry()
+        }
+    }
+
+    onXChanged: syncGeometry()
+    onYChanged: syncGeometry()
+    onWidthChanged: syncGeometry()
+    onHeightChanged: syncGeometry()
+    onVisibleChanged: syncGeometry()
+
+    Connections {
+        target: Window.window
+
+        function onWidthChanged() {
+            root.syncGeometry()
+        }
+
+        function onHeightChanged() {
+            root.syncGeometry()
+        }
+    }
+
+    Timer {
+        id: geometryFollowupTimer
+
+        interval: 16
+        repeat: false
+        onTriggered: root.syncGeometryNow()
     }
 }

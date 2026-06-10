@@ -1,13 +1,16 @@
 #pragma once
 
 #include <QObject>
+#include <QPointer>
 #include <gst/gst.h>
 
 #include <string>
 
 #include "mediaEngine/core/video_sink_selector.h"
 
-// Owns direct GStreamer playback using the same Qt/QML sink selection as preview.
+class QQuickItem;
+
+// Owns direct GStreamer playback using the same native sink selection as preview.
 
 namespace travis::media_engine::playback {
 
@@ -26,6 +29,7 @@ public:
 
     [[nodiscard]] PlaybackResult startFilePlayback(const std::string& filePath, QObject* qmlVideoItem);
     [[nodiscard]] PlaybackResult stopPlayback();
+    [[nodiscard]] PlaybackResult syncPlaybackGeometry();
 
     [[nodiscard]] bool isRunning() const;
     [[nodiscard]] travis::media_engine::core::PreviewVideoSinkKind activeSinkKind() const;
@@ -35,8 +39,9 @@ private:
 
     GstElement* pipeline_ = nullptr;
     GstElement* videoSink_ = nullptr;
+    QPointer<QQuickItem> playbackItem_;
     travis::media_engine::core::PreviewVideoSinkKind activeSinkKind_ =
-        travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl;
+        travis::media_engine::core::PreviewVideoSinkKind::D3d11Video;
     bool running_ = false;
 };
 

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(travis VERSION 0.1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
@@ -97,6 +97,7 @@ target_link_libraries(travis_application
 
 add_library(travis_media_engine
     src/mediaEngine/core/media_runtime.cpp
+    src/mediaEngine/core/native_video_overlay.cpp
     src/mediaEngine/core/video_sink_selector.cpp
     src/mediaEngine/discovery/source_discovery.cpp
     src/mediaEngine/metering/audio_meter_engine.cpp
@@ -207,6 +208,10 @@ qt_add_qml_module(travis_app
 target_include_directories(travis_app
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${TRAVIS_GSTREAMER_ROOT}/include
+        ${TRAVIS_GSTREAMER_ROOT}/include/gstreamer-1.0
+        ${TRAVIS_GSTREAMER_ROOT}/include/glib-2.0
+        ${TRAVIS_GSTREAMER_ROOT}/lib/glib-2.0/include
 )
 
 target_link_libraries(travis_app

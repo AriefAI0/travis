@@ -1,7 +1,7 @@
 # Runs the Qt app from the CMake build folder with local Qt and GStreamer runtime paths.
 
 param(
-    [string]$BuildDir = "build/mingw-debug",
+    [string]$BuildDir = "build/msvc-debug",
     [string]$GStreamerRuntimeRoot = "runtime/gstreamer/1.0/msvc_x86_64",
     [string]$QtRoot = "",
     [switch]$NoBuild,
@@ -70,7 +70,7 @@ if ([string]::IsNullOrWhiteSpace($QtRoot)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($QtRoot)) {
-    throw "Qt root could not be inferred from CMakeCache.txt. Pass -QtRoot C:/Qt/<version>/mingw_64."
+    throw "Qt root could not be inferred from CMakeCache.txt. Pass -QtRoot C:/Qt/<version>/msvc2022_64."
 }
 
 $qtRootPath = Resolve-RepoPath $QtRoot

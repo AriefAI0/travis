@@ -28,6 +28,7 @@ public:
     [[nodiscard]] QString lastError() const;
 
     Q_INVOKABLE bool startPlayback(const QString& filePath);
+    Q_INVOKABLE bool syncPlaybackGeometry();
     Q_INVOKABLE void stopPlayback();
 
 signals:

@@ -34,11 +34,8 @@ GStreamerHealthCheckResult MediaRuntime::healthCheck() const {
         }
     }
 
-    const bool hasD3d11PreviewSink = hasElementFactory("qml6d3d11sink");
-    const bool hasGlPreviewSink = hasElementFactory("qml6glsink");
-
-    if (!hasD3d11PreviewSink && !hasGlPreviewSink) {
-        missingPlugins.append(QStringLiteral("qml6d3d11sink|qml6glsink"));
+    if (!hasElementFactory("d3d11videosink")) {
+        missingPlugins.append(QStringLiteral("d3d11videosink"));
     }
 
     const bool hasRecordingEncoder =
@@ -47,15 +44,6 @@ GStreamerHealthCheckResult MediaRuntime::healthCheck() const {
         hasElementFactory("x264enc");
     if (!hasRecordingEncoder) {
         missingPlugins.append(QStringLiteral("qsvh264enc|mfh264enc|x264enc"));
-    }
-
-    if (hasGlPreviewSink) {
-        if (!hasElementFactory("glupload")) {
-            missingPlugins.append(QStringLiteral("glupload"));
-        }
-        if (!hasElementFactory("glcolorconvert")) {
-            missingPlugins.append(QStringLiteral("glcolorconvert"));
-        }
     }
 
     return GStreamerHealthCheckResult{
