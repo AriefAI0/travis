@@ -46,6 +46,7 @@ private:
         GstElement* queue = nullptr;
         travis::media_engine::core::PreviewVideoSinkKind sinkKind =
             travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl;
+        GstElement* videoConvert = nullptr;
         GstElement* glUpload = nullptr;
         GstElement* glColorConvert = nullptr;
         GstElement* sink = nullptr;
