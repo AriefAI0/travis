@@ -1,5 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQuickStyle>
 #include <QQuickWindow>
 
 #include <gst/gst.h>
@@ -11,6 +12,7 @@
 int main(int argc, char* argv[]) {
     gst_init(nullptr, nullptr);
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+    QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;

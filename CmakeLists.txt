@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 
 include(CTest)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml Sql Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml QuickControls2 Sql Test)
 
 qt_standard_project_setup()
 qt_policy(SET QTP0001 NEW)
@@ -196,6 +196,11 @@ qt_add_qml_module(travis_app
         qml/components/projects/ProjectCreatePanel.qml
         qml/components/projects/ProjectPageHeader.qml
         qml/components/projects/ProjectStatTile.qml
+        qml/components/projectWorkspace/StructureTreePanel.qml
+        qml/components/projectWorkspace/WorkspaceCenterPanel.qml
+        qml/components/projectWorkspace/WorkspaceHeader.qml
+        qml/components/projectWorkspace/WorkspacePanel.qml
+        qml/components/projectWorkspace/WorkspaceRightPanel.qml
         qml/components/RecordingControls.qml
         qml/components/StatusBanner.qml
         qml/dialogs/AdvancedAudioPropertiesDialog.qml
@@ -224,6 +229,7 @@ target_link_libraries(travis_app
         Qt6::Core
         Qt6::Qml
         Qt6::Quick
+        Qt6::QuickControls2
         travis_data_database
         travis_ui
 )
