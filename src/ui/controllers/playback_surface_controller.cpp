@@ -58,6 +58,19 @@ bool PlaybackSurfaceController::startPlayback(const QString& filePath) {
     return true;
 }
 
+bool PlaybackSurfaceController::syncPlaybackGeometry() {
+    const auto result = playbackEngine_.syncPlaybackGeometry();
+    if (!result.ok) {
+        setLastError(QString::fromStdString(result.message));
+        return false;
+    }
+
+    if (playbackEngine_.isRunning()) {
+        setLastError(QString{});
+    }
+    return true;
+}
+
 void PlaybackSurfaceController::stopPlayback() {
     const auto result = playbackEngine_.stopPlayback();
     if (!result.ok) {

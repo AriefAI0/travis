@@ -98,6 +98,19 @@ bool PreviewSurfaceController::startNdiPreview(
     return true;
 }
 
+bool PreviewSurfaceController::syncPreviewGeometry() {
+    const auto result = previewEngine_.syncPreviewGeometry();
+    if (!result.ok) {
+        setLastError(QString::fromStdString(result.message));
+        return false;
+    }
+
+    if (previewEngine_.hasActivePreview()) {
+        setLastError(QString{});
+    }
+    return true;
+}
+
 void PreviewSurfaceController::stopPreview() {
     const auto result = previewEngine_.stopPreview();
     if (!result.ok) {

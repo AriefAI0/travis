@@ -1,10 +1,9 @@
 #include "mediaEngine/preview/preview_engine.h"
 
+#include "mediaEngine/core/native_video_overlay.h"
 #include "mediaEngine/core/video_sink_selector.h"
 
 #include <QQuickItem>
-#include <QQuickWindow>
-#include <gst/video/videooverlay.h>
 
 // Reuses shared source sessions and attaches a native D3D11 video sink branch for live preview.
 
@@ -79,6 +78,18 @@ PreviewResult PreviewEngine::stopPreview() {
     return clearActivePreview();
 }
 
+PreviewResult PreviewEngine::syncPreviewGeometry() {
+    if (!activePreview_) {
+        return PreviewResult{true, "No active preview to sync"};
+    }
+
+    const auto syncResult = travis::media_engine::core::syncNativeVideoOverlayGeometry(
+        activePreview_->sink,
+        activePreview_->targetItem
+    );
+    return PreviewResult{syncResult.ok, syncResult.message};
+}
+
 bool PreviewEngine::hasActivePreview() const {
     return activePreview_ != nullptr;
 }
@@ -128,29 +139,14 @@ PreviewResult PreviewEngine::createPreviewBranch(
         return PreviewResult{false, "Failed to create preview branch elements"};
     }
 
-    QQuickWindow* targetWindow = targetItem->window();
-    if (targetWindow == nullptr) {
-        return PreviewResult{false, "Preview item is not attached to a window"};
-    }
-
     g_object_set(preview.queue, "leaky", 2, "max-size-buffers", 2, nullptr);
     g_object_set(preview.sink, "force-aspect-ratio", TRUE, nullptr);
 
-    gst_video_overlay_set_window_handle(
-        GST_VIDEO_OVERLAY(preview.sink),
-        static_cast<guintptr>(targetWindow->winId())
-    );
-
-    const QPointF scenePosition = targetItem->mapToScene(QPointF(0, 0));
-    const qreal devicePixelRatio = targetWindow->devicePixelRatio();
-    gst_video_overlay_set_render_rectangle(
-        GST_VIDEO_OVERLAY(preview.sink),
-        static_cast<gint>(scenePosition.x() * devicePixelRatio),
-        static_cast<gint>(scenePosition.y() * devicePixelRatio),
-        static_cast<gint>(targetItem->width() * devicePixelRatio),
-        static_cast<gint>(targetItem->height() * devicePixelRatio)
-    );
-    gst_video_overlay_expose(GST_VIDEO_OVERLAY(preview.sink));
+    const auto geometryResult =
+        travis::media_engine::core::syncNativeVideoOverlayGeometry(preview.sink, targetItem);
+    if (!geometryResult.ok) {
+        return PreviewResult{false, geometryResult.message};
+    }
 
     gst_bin_add_many(
         GST_BIN(session.pipeline),

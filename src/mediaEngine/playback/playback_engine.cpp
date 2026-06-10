@@ -1,10 +1,10 @@
 #include "mediaEngine/playback/playback_engine.h"
 
+#include "mediaEngine/core/native_video_overlay.h"
+
 #include <QFileInfo>
 #include <QQuickItem>
-#include <QQuickWindow>
 #include <QUrl>
-#include <gst/video/videooverlay.h>
 
 // Builds a native playback pipeline for Qt window-backed video surfaces.
 
@@ -32,11 +32,6 @@ PlaybackResult PlaybackEngine::startFilePlayback(const std::string& filePath, QO
         return PlaybackResult{false, "Playback video item must be a QQuickItem"};
     }
 
-    QQuickWindow* targetWindow = targetItem->window();
-    if (targetWindow == nullptr) {
-        return PlaybackResult{false, "Playback video item is not attached to a window"};
-    }
-
     const QFileInfo fileInfo(QString::fromStdString(filePath));
     if (!fileInfo.exists() || !fileInfo.isFile()) {
         return PlaybackResult{false, "Playback file does not exist"};
@@ -60,22 +55,14 @@ PlaybackResult PlaybackEngine::startFilePlayback(const std::string& filePath, QO
 
     videoSink_ = sinkSelection.sink;
     activeSinkKind_ = sinkSelection.kind;
+    playbackItem_ = targetItem;
 
-    gst_video_overlay_set_window_handle(
-        GST_VIDEO_OVERLAY(videoSink_),
-        static_cast<guintptr>(targetWindow->winId())
-    );
-
-    const QPointF scenePosition = targetItem->mapToScene(QPointF(0, 0));
-    const qreal devicePixelRatio = targetWindow->devicePixelRatio();
-    gst_video_overlay_set_render_rectangle(
-        GST_VIDEO_OVERLAY(videoSink_),
-        static_cast<gint>(scenePosition.x() * devicePixelRatio),
-        static_cast<gint>(scenePosition.y() * devicePixelRatio),
-        static_cast<gint>(targetItem->width() * devicePixelRatio),
-        static_cast<gint>(targetItem->height() * devicePixelRatio)
-    );
-    gst_video_overlay_expose(GST_VIDEO_OVERLAY(videoSink_));
+    const auto geometryResult =
+        travis::media_engine::core::syncNativeVideoOverlayGeometry(videoSink_, targetItem);
+    if (!geometryResult.ok) {
+        resetPipeline();
+        return PlaybackResult{false, geometryResult.message};
+    }
 
     const QUrl fileUrl = QUrl::fromLocalFile(fileInfo.absoluteFilePath());
     g_object_set(
@@ -101,6 +88,18 @@ PlaybackResult PlaybackEngine::stopPlayback() {
     return resetPipeline();
 }
 
+PlaybackResult PlaybackEngine::syncPlaybackGeometry() {
+    if (!running_) {
+        return PlaybackResult{true, "No active playback to sync"};
+    }
+
+    const auto syncResult = travis::media_engine::core::syncNativeVideoOverlayGeometry(
+        videoSink_,
+        playbackItem_.data()
+    );
+    return PlaybackResult{syncResult.ok, syncResult.message};
+}
+
 bool PlaybackEngine::isRunning() const {
     return running_;
 }
@@ -117,6 +116,7 @@ PlaybackResult PlaybackEngine::resetPipeline() {
         gst_object_unref(pipeline_);
         pipeline_ = nullptr;
         videoSink_ = nullptr;
+        playbackItem_.clear();
     }
 
     return PlaybackResult{true, "Playback stopped"};

@@ -35,6 +35,7 @@ public:
         QQuickItem* targetItem
     );
     [[nodiscard]] PreviewResult stopPreview();
+    [[nodiscard]] PreviewResult syncPreviewGeometry();
     [[nodiscard]] bool hasActivePreview() const;
 
 private:

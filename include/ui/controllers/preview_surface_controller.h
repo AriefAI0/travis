@@ -36,6 +36,7 @@ public:
         const QString& sourceElement
     );
     Q_INVOKABLE bool startNdiPreview(const QString& sourceName, const QString& urlAddress);
+    Q_INVOKABLE bool syncPreviewGeometry();
     Q_INVOKABLE void stopPreview();
 
 signals:
