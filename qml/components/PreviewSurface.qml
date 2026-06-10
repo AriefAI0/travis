@@ -12,8 +12,8 @@ Rectangle {
     border.width: 1
     radius: 0
 
-    Component.onCompleted: {
-        if (previewController) {
+    Window.onWindowChanged: {
+        if (Window.window && previewController) {
             previewController.previewItem = root
         }
     }
