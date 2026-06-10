@@ -184,14 +184,15 @@ PreviewResult PreviewEngine::createPreviewBranch(
         return PreviewResult{false, attachResult.message};
     }
 
-    bool syncOk = gst_element_sync_state_with_parent(preview.sink) &&
-        gst_element_sync_state_with_parent(preview.queue);
+    bool syncOk = gst_element_sync_state_with_parent(preview.queue);
 
     if (preview.sinkKind == travis::media_engine::core::PreviewVideoSinkKind::Qml6Gl) {
         syncOk = syncOk &&
-            gst_element_sync_state_with_parent(preview.glColorConvert) &&
-            gst_element_sync_state_with_parent(preview.glUpload);
+            gst_element_sync_state_with_parent(preview.glUpload) &&
+            gst_element_sync_state_with_parent(preview.glColorConvert);
     }
+
+    syncOk = syncOk && gst_element_sync_state_with_parent(preview.sink);
 
     if (!syncOk) {
         return PreviewResult{false, "Failed to sync preview branch with live source session"};
