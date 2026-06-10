@@ -60,5 +60,16 @@ ApplicationWindow {
 
         anchors.fill: parent
         initialItem: projectRoute
+
+        pushEnter: instantPageTransition
+        pushExit: instantPageTransition
+        popEnter: instantPageTransition
+        popExit: instantPageTransition
+        replaceEnter: instantPageTransition
+        replaceExit: instantPageTransition
+    }
+
+    Transition {
+        id: instantPageTransition
     }
 }
