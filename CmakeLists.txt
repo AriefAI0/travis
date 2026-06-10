@@ -191,6 +191,11 @@ qt_add_qml_module(travis_app
         qml/components/PlaybackPanel.qml
         qml/components/PlaybackSurface.qml
         qml/components/PreviewSurface.qml
+        qml/components/projects/ProjectActionButton.qml
+        qml/components/projects/ProjectCard.qml
+        qml/components/projects/ProjectCreatePanel.qml
+        qml/components/projects/ProjectPageHeader.qml
+        qml/components/projects/ProjectStatTile.qml
         qml/components/RecordingControls.qml
         qml/components/StatusBanner.qml
         qml/dialogs/AdvancedAudioPropertiesDialog.qml

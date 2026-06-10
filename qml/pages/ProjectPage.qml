@@ -3,191 +3,158 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import "../components"
-import "../layouts"
+import "../components/projects"
 
-// Lists projects from the native project service and routes into a selected project workspace.
+// Project dashboard page using the Electron project layout and card visual language.
 
-WorkspaceShellLayout {
+Item {
     id: root
 
     property var navigation
+    property bool createFormVisible: false
 
-    title: "Projects"
-    subtitle: projectViewModel.loading
-        ? "Loading projects..."
-        : "Select an existing inspection project or create a new one."
+    Rectangle {
+        anchors.fill: parent
+        color: "#0f1117"
+    }
 
-    headerActions: [
-        Button {
-            text: "Refresh"
-            enabled: !projectViewModel.loading
-            onClicked: projectViewModel.refreshProjects()
-        }
-    ]
+    Flickable {
+        id: pageScroll
 
-    body: [
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            spacing: 0
+        anchors.fill: parent
+        contentWidth: width
+        contentHeight: pageContent.implicitHeight + 64
+        clip: true
+
+        ColumnLayout {
+            id: pageContent
+
+            width: Math.min(Math.max(pageScroll.width - 40, 0), 1200)
+            x: Math.max(20, (pageScroll.width - width) / 2)
+            y: 32
+            spacing: 24
+
+            ProjectPageHeader {
+                Layout.fillWidth: true
+                loading: projectViewModel.loading
+                createFormVisible: root.createFormVisible
+                onRefreshRequested: projectViewModel.refreshProjects()
+                onToggleCreateRequested: root.createFormVisible = !root.createFormVisible
+            }
+
+            ProjectCreatePanel {
+                id: createPanel
+
+                Layout.fillWidth: true
+                visible: root.createFormVisible
+                loading: projectViewModel.loading
+                errorMessage: projectViewModel.lastError
+                onCancelRequested: root.createFormVisible = false
+                onCreateRequested: function(title, description, documentId) {
+                    if (projectViewModel.createProject(title, description, documentId)) {
+                        createPanel.clearFields()
+                        root.createFormVisible = false
+                    }
+                }
+            }
+
+            StatusBanner {
+                Layout.fillWidth: true
+                message: !root.createFormVisible ? projectViewModel.lastError : ""
+                error: true
+            }
+
+            StatusBanner {
+                Layout.fillWidth: true
+                message: projectViewModel.statusMessage
+                error: false
+            }
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.preferredWidth: 2
-                radius: 0
-                color: "#121922"
-                border.color: "#31404d"
+                implicitHeight: 108
+                visible: projectViewModel.loading
+                radius: 18
+                color: "#1b1f27"
+                border.color: "#303642"
                 border.width: 1
 
-                ListView {
-                    id: projectList
-
+                Label {
                     anchors.fill: parent
-                    anchors.margins: 0
-                    clip: true
-                    spacing: 0
-                    model: projectViewModel.projects
-
-                    delegate: Rectangle {
-                        width: ListView.view.width
-                        implicitHeight: projectCardContent.implicitHeight + 16
-                        radius: 0
-                        color: index % 2 === 0 ? "#16202a" : "#121a22"
-                        border.color: "#263542"
-                        border.width: 0
-
-                        ColumnLayout {
-                            id: projectCardContent
-
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 4
-
-                            Label {
-                                Layout.fillWidth: true
-                                color: "#f4f7fa"
-                                font.pixelSize: 18
-                                font.bold: true
-                                text: modelData.title
-                                elide: Text.ElideRight
-                            }
-
-                            Label {
-                                Layout.fillWidth: true
-                                color: "#9fb1bf"
-                                text: modelData.description.length > 0
-                                    ? modelData.description
-                                    : "No description"
-                                wrapMode: Text.Wrap
-                            }
-
-                            RowLayout {
-                                Layout.fillWidth: true
-
-                                Label {
-                                    Layout.fillWidth: true
-                                    color: "#7f94a6"
-                                    text: modelData.documentId.length > 0
-                                        ? `Document: ${modelData.documentId}`
-                                        : "No document ID"
-                                }
-
-                                Button {
-                                    text: "Open"
-                                    enabled: root.navigation && modelData.projectId > 0
-                                    onClicked: root.navigation.goProject(modelData.projectId)
-                                }
-
-                                Button {
-                                    text: "Inspect"
-                                    enabled: root.navigation && modelData.projectId > 0
-                                    onClicked: root.navigation.goInspectionWorkspace(modelData.projectId)
-                                }
-                            }
-                        }
-                    }
+                    anchors.margins: 24
+                    color: "#a8b0bd"
+                    font.pixelSize: 13
+                    text: "Loading projects..."
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
 
             Rectangle {
-                Layout.preferredWidth: 340
-                Layout.fillHeight: true
-                radius: 0
-                color: "#101820"
-                border.color: "#31404d"
+                Layout.fillWidth: true
+                implicitHeight: emptyLayout.implicitHeight + 48
+                visible: !projectViewModel.loading &&
+                    projectViewModel.lastError.length === 0 &&
+                    projectViewModel.projects.length === 0
+                radius: 18
+                color: "#1b1f27"
+                border.color: "#303642"
                 border.width: 1
 
                 ColumnLayout {
+                    id: emptyLayout
+
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 8
+                    anchors.margins: 24
+                    spacing: 12
 
                     Label {
-                        color: "#f4f7fa"
-                        font.pixelSize: 18
-                        text: "Create Project"
+                        color: "#e6e8eb"
+                        font.bold: true
+                        font.pixelSize: 20
+                        text: "No projects yet"
                     }
 
-                    StatusBanner {
-                        Layout.fillWidth: true
-                        message: projectViewModel.lastError
-                        error: true
+                    Label {
+                        color: "#a8b0bd"
+                        font.pixelSize: 13
+                        text: "Create your first project to start building the inspection workflow."
+                        wrapMode: Text.Wrap
                     }
 
-                    StatusBanner {
-                        Layout.fillWidth: true
-                        message: projectViewModel.statusMessage
-                        error: false
+                    ProjectActionButton {
+                        primary: true
+                        visible: !root.createFormVisible
+                        text: "Create project"
+                        onClicked: root.createFormVisible = true
                     }
+                }
+            }
 
-                    TextField {
-                        id: titleField
+            Flow {
+                id: projectGrid
 
-                        Layout.fillWidth: true
-                        placeholderText: "Project title"
-                    }
+                Layout.fillWidth: true
+                visible: !projectViewModel.loading &&
+                    projectViewModel.lastError.length === 0 &&
+                    projectViewModel.projects.length > 0
+                spacing: 20
 
-                    TextArea {
-                        id: descriptionField
+                Repeater {
+                    model: projectViewModel.projects
 
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 90
-                        placeholderText: "Description"
-                        wrapMode: TextArea.Wrap
-                    }
-
-                    TextField {
-                        id: documentIdField
-
-                        Layout.fillWidth: true
-                        placeholderText: "Document ID"
-                    }
-
-                    Button {
-                        Layout.fillWidth: true
-                        text: "Create"
-                        enabled: !projectViewModel.loading && titleField.text.trim().length > 0
-                        onClicked: {
-                            if (projectViewModel.createProject(
-                                    titleField.text,
-                                    descriptionField.text,
-                                    documentIdField.text
-                                )) {
-                                titleField.clear()
-                                descriptionField.clear()
-                                documentIdField.clear()
+                    ProjectCard {
+                        project: modelData
+                        width: Math.min(320, projectGrid.width)
+                        onOpenRequested: function(projectId) {
+                            if (root.navigation && projectId > 0) {
+                                root.navigation.goProject(projectId)
                             }
                         }
-                    }
-
-                    Item {
-                        Layout.fillHeight: true
                     }
                 }
             }
         }
-    ]
+    }
 
     Component.onCompleted: projectViewModel.refreshProjects()
 }

@@ -25,6 +25,12 @@ QVariantMap toProjectVariant(const travis::models::Project& project) {
         {QStringLiteral("title"), project.title},
         {QStringLiteral("description"), project.description.value_or(QString{})},
         {QStringLiteral("documentId"), project.documentId.value_or(QString{})},
+        {QStringLiteral("overallProgress"), 0},
+        {QStringLiteral("totalAssets"), 0},
+        {QStringLiteral("totalComponents"), 0},
+        {QStringLiteral("totalItems"), 0},
+        {QStringLiteral("completedItems"), 0},
+        {QStringLiteral("pendingItems"), 0},
         {QStringLiteral("createdAt"), project.createdAt},
         {QStringLiteral("updatedAt"), project.updatedAt},
     };
