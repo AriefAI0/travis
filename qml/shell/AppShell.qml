@@ -3,7 +3,7 @@ import QtQuick.Controls
 
 import "../pages"
 
-// Owns the application window and Qt-native StackView navigation.
+// Owns the application window and cached route navigation.
 
 ApplicationWindow {
     id: root
@@ -13,52 +13,111 @@ ApplicationWindow {
     visible: true
     title: "Travis Inspection Workspace"
 
-    Component {
-        id: projectRoute
+    property string currentRoute: "projects"
 
-        ProjectPage {
-            navigation: appNavigation
+    function stopRouteSideEffects(nextRoute) {
+        if (currentRoute === "playback" && nextRoute !== "playback" && playbackLoader.item) {
+            playbackLoader.item.stopPlaybackRoute()
         }
     }
 
-    Component {
-        id: projectWorkspaceRoute
+    function showProjects() {
+        stopRouteSideEffects("projects")
+        currentRoute = "projects"
+        projectLoader.active = true
+    }
 
-        ProjectWorkspacePage {
-            navigation: appNavigation
+    function showProject(projectId) {
+        stopRouteSideEffects("project")
+        currentRoute = "project"
+        projectWorkspaceLoader.active = true
+        projectWorkspaceLoader.pendingProjectId = Number(projectId) || 0
+        if (projectWorkspaceLoader.item) {
+            projectWorkspaceLoader.item.projectId = projectWorkspaceLoader.pendingProjectId
         }
     }
 
-    Component {
-        id: inspectionWorkspaceRoute
-
-        InspectionWorkspacePage {
-            navigation: appNavigation
+    function showInspection(projectId) {
+        stopRouteSideEffects("inspection")
+        currentRoute = "inspection"
+        inspectionLoader.active = true
+        inspectionLoader.pendingProjectId = Number(projectId) || 0
+        if (inspectionLoader.item) {
+            inspectionLoader.item.projectId = inspectionLoader.pendingProjectId
         }
     }
 
-    Component {
-        id: playbackWorkspaceRoute
-
-        PlaybackWorkspacePage {
-            navigation: appNavigation
+    function showPlayback(projectId, masterVideoId) {
+        currentRoute = "playback"
+        playbackLoader.active = true
+        playbackLoader.pendingProjectId = Number(projectId) || 0
+        playbackLoader.pendingMasterVideoId = Number(masterVideoId) || 0
+        if (playbackLoader.item) {
+            playbackLoader.item.projectId = playbackLoader.pendingProjectId
+            playbackLoader.item.masterVideoId = playbackLoader.pendingMasterVideoId
         }
     }
 
     AppNavigation {
         id: appNavigation
 
-        stackView: appStack
-        projectPage: projectRoute
-        projectWorkspacePage: projectWorkspaceRoute
-        inspectionWorkspacePage: inspectionWorkspaceRoute
-        playbackWorkspacePage: playbackWorkspaceRoute
+        shell: root
     }
 
-    StackView {
-        id: appStack
+    Loader {
+        id: projectLoader
 
         anchors.fill: parent
-        initialItem: projectRoute
+        active: true
+        visible: root.currentRoute === "projects"
+        sourceComponent: ProjectPage {
+            navigation: appNavigation
+        }
+    }
+
+    Loader {
+        id: projectWorkspaceLoader
+
+        property int pendingProjectId: 0
+
+        anchors.fill: parent
+        active: false
+        visible: root.currentRoute === "project"
+        sourceComponent: ProjectWorkspacePage {
+            navigation: appNavigation
+        }
+        onLoaded: item.projectId = pendingProjectId
+    }
+
+    Loader {
+        id: inspectionLoader
+
+        property int pendingProjectId: 0
+
+        anchors.fill: parent
+        active: false
+        visible: root.currentRoute === "inspection"
+        sourceComponent: InspectionWorkspacePage {
+            navigation: appNavigation
+        }
+        onLoaded: item.projectId = pendingProjectId
+    }
+
+    Loader {
+        id: playbackLoader
+
+        property int pendingProjectId: 0
+        property int pendingMasterVideoId: 0
+
+        anchors.fill: parent
+        active: false
+        visible: root.currentRoute === "playback"
+        sourceComponent: PlaybackWorkspacePage {
+            navigation: appNavigation
+        }
+        onLoaded: {
+            item.projectId = pendingProjectId
+            item.masterVideoId = pendingMasterVideoId
+        }
     }
 }

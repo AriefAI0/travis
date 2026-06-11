@@ -49,6 +49,22 @@ function Read-CMakeCacheValue {
     return ($line -split "=", 2)[1]
 }
 
+function Get-PresetNameFromBuildDir {
+    param([string]$BuildRoot)
+
+    $normalized = $BuildRoot.Replace("\", "/")
+    if ($normalized.EndsWith("/build/msvc-debug")) {
+        return "msvc-debug"
+    }
+
+    if ($normalized.EndsWith("/build/mingw-debug")) {
+        return "mingw-debug"
+    }
+
+    return ""
+}
+
+$repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $buildRoot = Resolve-RepoPath $BuildDir
 $runtimeRoot = Resolve-RepoPath $GStreamerRuntimeRoot
 $cachePath = Join-Path $buildRoot "CMakeCache.txt"
@@ -83,6 +99,13 @@ Assert-ExistingPath $gstBinPath "GStreamer bin folder was not found."
 Assert-ExistingPath $gstPluginPath "GStreamer plugin folder was not found."
 
 if (-not $NoBuild) {
+    $presetName = Get-PresetNameFromBuildDir $buildRoot
+    if ([string]::IsNullOrWhiteSpace($presetName)) {
+        cmake -S $repoRoot -B $buildRoot
+    } else {
+        cmake --preset $presetName
+    }
+
     cmake --build $buildRoot
 }
 

@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 
 include(CTest)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml Sql Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Qml QuickControls2 Sql Test)
 
 qt_standard_project_setup()
 qt_policy(SET QTP0001 NEW)
@@ -152,6 +152,7 @@ add_library(travis_ui
     include/ui/viewmodels/project_workspace_viewmodel.h
     include/ui/viewmodels/recording_viewmodel.h
     include/ui/viewmodels/source_discovery_viewmodel.h
+    include/ui/viewmodels/structure_tree_model.h
     src/ui/controllers/playback_surface_controller.cpp
     src/ui/controllers/preview_surface_controller.cpp
     src/ui/viewmodels/audio_meter_viewmodel.cpp
@@ -161,6 +162,7 @@ add_library(travis_ui
     src/ui/viewmodels/project_workspace_viewmodel.cpp
     src/ui/viewmodels/recording_viewmodel.cpp
     src/ui/viewmodels/source_discovery_viewmodel.cpp
+    src/ui/viewmodels/structure_tree_model.cpp
 )
 
 target_include_directories(travis_ui
@@ -187,11 +189,46 @@ qt_add_qml_module(travis_app
     VERSION 1.0
     QML_FILES
         qml/Main.qml
-        qml/components/AvDock.qml
         qml/components/PlaybackPanel.qml
         qml/components/PlaybackSurface.qml
         qml/components/PreviewSurface.qml
-        qml/components/RecordingControls.qml
+        qml/components/inspection/avDock/audio/AudioSlotList.qml
+        qml/components/inspection/avDock/audio/AudioSlotRow.qml
+        qml/components/inspection/avDock/InspectionAvDock.qml
+        qml/components/inspection/avDock/video/VideoSourcePanel.qml
+        qml/components/inspection/bottomBar/InspectionEventPlaceholder.qml
+        qml/components/inspection/centerPanel/InspectionPreviewPanel.qml
+        qml/components/inspection/header/InspectionHeaderStatus.qml
+        qml/components/inspection/header/RecordingControl.qml
+        qml/components/inspection/InspectionWorkspaceContent.qml
+        qml/components/inspection/leftPanel/InspectionTreePanel.qml
+        qml/components/inspection/rightPanel/InspectionDetailsPanel.qml
+        qml/components/playback/centerPanel/PlaybackVideoPanel.qml
+        qml/components/playback/evidenceExplorer/PlaybackEvidenceExplorer.qml
+        qml/components/playback/PlaybackWorkspaceContent.qml
+        qml/components/playback/rightPanel/PlaybackMetadataPanel.qml
+        qml/components/playback/timeline/PlaybackTimelinePanel.qml
+        qml/components/projects/ProjectActionButton.qml
+        qml/components/projects/ProjectCard.qml
+        qml/components/projects/ProjectCreatePanel.qml
+        qml/components/projects/ProjectPageHeader.qml
+        qml/components/projects/ProjectStatTile.qml
+        qml/components/projectWorkspace/components/DetailCard.qml
+        qml/components/projectWorkspace/components/ReviewRecordingCard.qml
+        qml/components/projectWorkspace/components/StatBox.qml
+        qml/components/projectWorkspace/components/StructureTable.qml
+        qml/components/projectWorkspace/details/AssetDetailsView.qml
+        qml/components/projectWorkspace/details/ComponentDetailsView.qml
+        qml/components/projectWorkspace/details/ItemDetailsView.qml
+        qml/components/projectWorkspace/details/ProjectDetailsView.qml
+        qml/components/projectWorkspace/panels/WorkspaceCenterPanel.qml
+        qml/components/projectWorkspace/WorkspaceHeader.qml
+        qml/components/projectWorkspace/WorkspacePanel.qml
+        qml/components/projectWorkspace/panels/WorkspaceRightPanel.qml
+        qml/components/projectWorkspace/summaries/ProjectRecordingsSummary.qml
+        qml/components/projectWorkspace/summaries/SelectionSummaryPanel.qml
+        qml/components/projectWorkspace/summaries/WorkspaceSelectionHeader.qml
+        qml/components/workspaceCommon/StructureTreePanel.qml
         qml/components/StatusBanner.qml
         qml/dialogs/AdvancedAudioPropertiesDialog.qml
         qml/dialogs/SourceSelectionDialog.qml
@@ -219,6 +256,7 @@ target_link_libraries(travis_app
         Qt6::Core
         Qt6::Qml
         Qt6::Quick
+        Qt6::QuickControls2
         travis_data_database
         travis_ui
 )

@@ -9,6 +9,7 @@
 #include "services/session_service.h"
 #include "services/structure_service.h"
 #include "services/video_service.h"
+#include "ui/viewmodels/structure_tree_model.h"
 
 // Exposes selected-project workspace overview data to QML.
 
@@ -19,6 +20,7 @@ class ProjectWorkspaceViewModel : public QObject {
     Q_PROPERTY(qint64 projectId READ projectId NOTIFY projectChanged)
     Q_PROPERTY(QVariantMap project READ project NOTIFY projectChanged)
     Q_PROPERTY(QVariantList structureTree READ structureTree NOTIFY structureTreeChanged)
+    Q_PROPERTY(travis::ui::viewmodels::StructureTreeModel* structureTreeModel READ structureTreeModel CONSTANT)
     Q_PROPERTY(QVariantList sessions READ sessions NOTIFY sessionsChanged)
     Q_PROPERTY(QVariantList masterVideos READ masterVideos NOTIFY masterVideosChanged)
     Q_PROPERTY(int assetCount READ assetCount NOTIFY structureTreeChanged)
@@ -39,6 +41,7 @@ public:
     [[nodiscard]] qint64 projectId() const;
     [[nodiscard]] QVariantMap project() const;
     [[nodiscard]] QVariantList structureTree() const;
+    [[nodiscard]] travis::ui::viewmodels::StructureTreeModel* structureTreeModel();
     [[nodiscard]] QVariantList sessions() const;
     [[nodiscard]] QVariantList masterVideos() const;
     [[nodiscard]] int assetCount() const;
@@ -76,6 +79,7 @@ private:
     qint64 projectId_ = 0;
     QVariantMap project_;
     QVariantList structureTree_;
+    travis::ui::viewmodels::StructureTreeModel structureTreeModel_;
     QVariantList sessions_;
     QVariantList masterVideos_;
     int assetCount_ = 0;

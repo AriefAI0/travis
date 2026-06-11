@@ -49,7 +49,9 @@ add_executable(app_context_test
 add_executable(project_workspace_viewmodel_test
     ui/project_workspace_viewmodel_test.cpp
     ../include/ui/viewmodels/project_workspace_viewmodel.h
+    ../include/ui/viewmodels/structure_tree_model.h
     ../src/ui/viewmodels/project_workspace_viewmodel.cpp
+    ../src/ui/viewmodels/structure_tree_model.cpp
     support/sqlite_test_helper.cpp
 )
 
