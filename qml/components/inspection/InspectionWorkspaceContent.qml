@@ -7,7 +7,7 @@ import "avDock"
 import "header"
 import "../../layouts"
 
-// Heavy inspection workspace content loaded after route navigation is visible.
+// Composes the inspection workspace slots while keeping backend work in viewmodels.
 
 Item {
     id: root
@@ -49,30 +49,234 @@ Item {
 
     InspectionWorkspaceLayout {
         anchors.fill: parent
-        title: "Inspection Workspace"
-        subtitle: root.projectId > 0
-            ? `Inspection workspace for ${inspectionContextViewModel.project.title || ("project " + root.projectId)}`
-            : "Native Qt/QML shell for preview, source selection, and recording control"
+        title: inspectionContextViewModel.project.title || "Inspection Workspace"
+        subtitle: "Inspection workspace"
 
-        headerActions: [
+        headerNavigation: [
             Button {
-                text: "Projects"
+                Layout.alignment: Qt.AlignLeft
+                flat: true
+                implicitHeight: 24
+                text: "< Project"
                 enabled: root.navigation
-                onClicked: root.navigation.goProjects()
+                onClicked: root.navigation && root.projectId > 0
+                    ? root.navigation.goProject(root.projectId)
+                    : root.navigation.goProjects()
             },
 
-            Button {
-                text: "Project"
-                enabled: root.navigation && root.projectId > 0
-                onClicked: root.navigation.goProject(root.projectId)
-            },
-
-            RecordingControl {
-                recordingViewModel: root.recordingVm
+            Label {
+                Layout.fillWidth: true
+                color: "#78818f"
+                font.pixelSize: 10
+                text: "INSPECTION WORKSPACE"
+                elide: Text.ElideRight
             }
         ]
 
-        controls: [
+        headerStatus: [
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                Rectangle {
+                    Layout.preferredWidth: 8
+                    Layout.preferredHeight: 8
+                    radius: 4
+                    color: recordingViewModel.recordingActive
+                        ? (recordingViewModel.paused ? "#d8a536" : "#c1272d")
+                        : "#78818f"
+                }
+
+                Label {
+                    color: "#a8b0bd"
+                    font.pixelSize: 11
+                    text: recordingViewModel.recordingActive
+                        ? (recordingViewModel.paused ? "Paused" : "Recording")
+                        : "Idle"
+                }
+
+                Label {
+                    color: "#78818f"
+                    font.pixelSize: 11
+                    text: inspectionContextViewModel.sessionId > 0
+                        ? `Session ${inspectionContextViewModel.sessionId}`
+                        : "No session"
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                RecordingControl {
+                    recordingViewModel: root.recordingVm
+                }
+            }
+        ]
+
+        leftSidebar: [
+            Label {
+                Layout.fillWidth: true
+                color: "#78818f"
+                font.bold: true
+                font.pixelSize: 10
+                text: "INSPECTION TREE"
+            },
+
+            Label {
+                Layout.fillWidth: true
+                visible: inspectionContextViewModel.inspectionItems.length === 0
+                color: "#78818f"
+                text: inspectionContextViewModel.loading ? "Loading structure..." : "No inspection items."
+                wrapMode: Text.Wrap
+            },
+
+            ListView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                spacing: 4
+                model: inspectionContextViewModel.inspectionItems
+
+                delegate: Button {
+                    width: ListView.view.width
+                    height: 30
+                    text: modelData.itemLabel
+                    onClicked: inspectionContextViewModel.selectItem(modelData.itemId)
+
+                    contentItem: ColumnLayout {
+                        spacing: 1
+
+                        Label {
+                            Layout.fillWidth: true
+                            color: modelData.itemId === inspectionContextViewModel.selectedItemId ? "#e6e8eb" : "#c9ced6"
+                            font.pixelSize: 12
+                            text: modelData.itemLabel
+                            elide: Text.ElideRight
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            color: "#78818f"
+                            font.pixelSize: 10
+                            text: `${modelData.assetName} / ${modelData.componentName}`
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    background: Rectangle {
+                        radius: 4
+                        color: modelData.itemId === inspectionContextViewModel.selectedItemId
+                            ? "#3b2227"
+                            : (parent.hovered ? "#20242d" : "transparent")
+                        border.color: modelData.itemId === inspectionContextViewModel.selectedItemId ? "#c1272d" : "transparent"
+                        border.width: 1
+                    }
+                }
+            }
+        ]
+
+        leftBottom: [
+            InspectionAvDock {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                recordingViewModel: root.recordingVm
+                previewController: root.previewController
+                sourceDiscoveryViewModel: root.sourceDiscoveryVm
+                audioMeterViewModel: root.audioMeterVm
+            }
+        ]
+
+        centerContent: [
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: "#000000"
+
+                PreviewSurface {
+                    anchors.fill: parent
+                    previewController: root.previewController
+                }
+            }
+        ]
+
+        rightSidebar: [
+            Label {
+                Layout.fillWidth: true
+                color: "#78818f"
+                font.bold: true
+                font.pixelSize: 10
+                text: "INSPECTION DETAILS"
+            },
+
+            Label {
+                Layout.fillWidth: true
+                color: "#e6e8eb"
+                font.bold: true
+                font.pixelSize: 14
+                text: inspectionContextViewModel.selectedItemId > 0
+                    ? inspectionContextViewModel.selectedItem.itemLabel
+                    : "Select an inspection item"
+                wrapMode: Text.Wrap
+            },
+
+            Label {
+                Layout.fillWidth: true
+                color: "#a8b0bd"
+                text: inspectionContextViewModel.selectedItemId > 0
+                    ? `${inspectionContextViewModel.selectedItem.assetName} / ${inspectionContextViewModel.selectedItem.componentName}`
+                    : "Choose an item from the inspection tree to enable clipping."
+                wrapMode: Text.Wrap
+            },
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: "#303642"
+            },
+
+            Label {
+                Layout.fillWidth: true
+                color: "#78818f"
+                font.bold: true
+                font.pixelSize: 10
+                text: "TASK TOOLS"
+            },
+
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 2
+                columnSpacing: 6
+                rowSpacing: 6
+
+                Repeater {
+                    model: ["GVI", "CVI", "MGI", "FMD"]
+
+                    Button {
+                        Layout.fillWidth: true
+                        text: modelData
+                        enabled: inspectionContextViewModel.selectedItemId > 0
+                        onClicked: inspectionTypeField.text = modelData
+                    }
+                }
+            },
+
+            Label {
+                Layout.fillWidth: true
+                color: "#78818f"
+                text: "Task tools are placeholders until detailed Electron task forms are migrated."
+                wrapMode: Text.Wrap
+            }
+        ]
+
+        bottomContent: [
+            Label {
+                Layout.fillWidth: true
+                color: "#78818f"
+                font.bold: true
+                font.pixelSize: 10
+                text: "RECORDER / RESERVED"
+            },
+
             StatusBanner {
                 Layout.fillWidth: true
                 message: inspectionContextViewModel.lastError.length > 0
@@ -96,15 +300,8 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
 
-                Label {
-                    color: "#e3ebf3"
-                    text: "Inspection Session"
-                }
-
                 ComboBox {
-                    id: sessionCombo
-
-                    Layout.preferredWidth: 260
+                    Layout.preferredWidth: 220
                     model: inspectionContextViewModel.sessions
                     textRole: "name"
                     valueRole: "sessionId"
@@ -121,7 +318,7 @@ Item {
                 TextField {
                     id: sessionNameField
 
-                    Layout.preferredWidth: 220
+                    Layout.preferredWidth: 180
                     placeholderText: "New session name"
                     enabled: root.projectId > 0
                     onAccepted: createSessionButton.clicked()
@@ -139,42 +336,15 @@ Item {
                         }
                     }
                 }
-
-                Label {
-                    Layout.fillWidth: true
-                    color: "#9fb1bf"
-                    text: inspectionContextViewModel.sessionId > 0
-                        ? `Active session: ${inspectionContextViewModel.selectedSession.name}`
-                        : "Create or select a session before recording"
-                    elide: Text.ElideRight
-                }
             },
 
             RowLayout {
                 Layout.fillWidth: true
 
-                Label {
-                    color: "#e3ebf3"
-                    text: "Inspection Item"
-                }
-
-                ComboBox {
-                    id: inspectionItemCombo
-
-                    Layout.preferredWidth: 360
-                    model: inspectionContextViewModel.inspectionItems
-                    textRole: "displayName"
-                    valueRole: "itemId"
-                    displayText: currentIndex >= 0 ? currentText : "Select item"
-                    enabled: inspectionContextViewModel.inspectionItems.length > 0
-
-                    onActivated: inspectionContextViewModel.selectItem(currentValue)
-                }
-
                 TextField {
                     id: inspectionTypeField
 
-                    Layout.preferredWidth: 120
+                    Layout.preferredWidth: 90
                     text: "GVI"
                     placeholderText: "Type"
                 }
@@ -210,35 +380,11 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
 
-                Label {
-                    color: "#e3ebf3"
-                    text: "Recording ID"
-                }
-
                 TextField {
                     Layout.preferredWidth: 180
                     text: recordingViewModel.recordingId
-                    placeholderText: "recording-001"
+                    placeholderText: "Recording ID"
                     onTextChanged: recordingViewModel.recordingId = text
-                }
-
-                Label {
-                    color: "#e3ebf3"
-                    text: "Session ID"
-                }
-
-                TextField {
-                    Layout.preferredWidth: 120
-                    text: recordingViewModel.sessionId > 0 ? recordingViewModel.sessionId.toString() : ""
-                    placeholderText: "1"
-                    inputMethodHints: Qt.ImhDigitsOnly
-                    enabled: false
-                    onTextChanged: recordingViewModel.sessionId = text.length > 0 ? Number(text) : 0
-                }
-
-                Label {
-                    color: "#e3ebf3"
-                    text: "Output"
                 }
 
                 TextField {
@@ -247,30 +393,12 @@ Item {
                     placeholderText: "C:/recordings/session-001/master.mkv"
                     onTextChanged: recordingViewModel.outputPath = text
                 }
-            }
-        ]
-
-        mainContent: [
-            PreviewSurface {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                previewController: root.previewController
             },
 
             PlaybackPanel {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 140
-                playbackViewModel: root.playbackVm
-            }
-        ]
-
-        sideDock: [
-            InspectionAvDock {
                 Layout.fillHeight: true
-                recordingViewModel: root.recordingVm
-                previewController: root.previewController
-                sourceDiscoveryViewModel: root.sourceDiscoveryVm
-                audioMeterViewModel: root.audioMeterVm
+                playbackViewModel: root.playbackVm
             }
         ]
     }

@@ -15,9 +15,7 @@ Rectangle {
     property var audioMeterViewModel
 
     radius: 0
-    color: "#121a22"
-    border.color: "#30404d"
-    border.width: 1
+    color: "#141820"
 
     property int activeTabIndex: 0
 
@@ -85,14 +83,15 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 8
-        spacing: 8
+        spacing: 6
 
         RowLayout {
             Layout.fillWidth: true
 
             Label {
                 text: "A/V Dock"
-                font.pixelSize: 18
+                font.pixelSize: 12
+                font.bold: true
                 color: "#f4f7fa"
             }
 
@@ -101,12 +100,14 @@ Rectangle {
             }
 
             Button {
+                implicitHeight: 24
                 text: "Video"
                 highlighted: root.activeTabIndex === 0
                 onClicked: root.activeTabIndex = 0
             }
 
             Button {
+                implicitHeight: 24
                 text: "Audio"
                 highlighted: root.activeTabIndex === 1
                 onClicked: root.activeTabIndex = 1
@@ -128,19 +129,16 @@ Rectangle {
                     Rectangle {
                         Layout.fillWidth: true
                         radius: 0
-                        color: "#10171d"
-                        border.color: "#2f3a44"
-                        border.width: 1
-                        implicitHeight: 140
+                        color: "transparent"
+                        implicitHeight: 72
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 6
+                            spacing: 3
 
                             Label {
                                 color: "#eef3f7"
-                                font.pixelSize: 15
+                                font.pixelSize: 12
                                 text: root.hasVideoSource()
                                     ? recordingViewModel.sourceName
                                     : "No video source selected"
@@ -165,18 +163,21 @@ Rectangle {
 
                     RowLayout {
                         Button {
+                            implicitHeight: 24
                             text: root.hasVideoSource() ? "Change Source" : "Add Source"
                             enabled: recordingViewModel && sourceDiscoveryViewModel
                             onClicked: sourceSelectionDialog.openForCurrentSource()
                         }
 
                         Button {
+                            implicitHeight: 24
                             text: "Stop Preview"
                             enabled: previewController && root.hasVideoSource()
                             onClicked: previewController.stopPreview()
                         }
 
                         Button {
+                            implicitHeight: 24
                             text: "Popout"
                             enabled: false
                         }

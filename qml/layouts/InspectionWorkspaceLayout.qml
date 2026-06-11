@@ -1,98 +1,208 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 
-// Provides the reusable inspection workspace frame with desktop-style pane separators.
+// Provides the compact inspection workspace frame and slot geometry.
 
 Item {
     id: root
 
     property string title: "Inspection Workspace"
     property string subtitle: ""
-    property alias headerActions: headerActionsSlot.data
-    property alias controls: controlsSlot.data
-    property alias mainContent: mainContentSlot.data
-    property alias sideDock: sideDockSlot.data
+    property alias headerNavigation: headerNavigationSlot.data
+    property alias headerStatus: headerStatusSlot.data
+    property alias leftSidebar: leftSidebarSlot.data
+    property alias leftBottom: leftBottomSlot.data
+    property alias centerContent: centerContentSlot.data
+    property alias rightSidebar: rightSidebarSlot.data
+    property alias bottomContent: bottomContentSlot.data
 
     Rectangle {
         anchors.fill: parent
-        color: "#101820"
+        color: "#0f1117"
     }
 
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        RowLayout {
+        Rectangle {
             Layout.fillWidth: true
-            Layout.leftMargin: 12
-            Layout.rightMargin: 12
-            Layout.topMargin: 8
-            Layout.bottomMargin: 8
+            Layout.preferredHeight: 56
+            radius: 0
+            color: "#141820"
 
-            ColumnLayout {
-                spacing: 4
+            GridLayout {
+                anchors.fill: parent
+                anchors.margins: 8
+                columns: 3
+                columnSpacing: 8
+                rowSpacing: 0
 
-                Label {
-                    text: root.title
-                    font.pixelSize: 22
-                    color: "#f6f8fb"
+                ColumnLayout {
+                    id: headerNavigationSlot
+
+                    Layout.minimumWidth: 180
+                    Layout.preferredWidth: 220
+                    Layout.maximumWidth: 260
+                    Layout.alignment: Qt.AlignVCenter
+                    spacing: 2
                 }
 
-                Label {
-                    color: "#9fb1bf"
-                    text: root.subtitle
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    spacing: 2
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.title
+                        font.bold: true
+                        font.pixelSize: 14
+                        color: "#e6e8eb"
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.subtitle
+                        font.pixelSize: 10
+                        color: "#78818f"
+                        elide: Text.ElideRight
+                    }
                 }
-            }
 
-            Item {
-                Layout.fillWidth: true
-            }
+                ColumnLayout {
+                    id: headerStatusSlot
 
-            RowLayout {
-                id: headerActionsSlot
+                    Layout.minimumWidth: 300
+                    Layout.preferredWidth: 420
+                    Layout.maximumWidth: 520
+                    Layout.alignment: Qt.AlignVCenter
+                    spacing: 0
+                }
             }
         }
 
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 1
-            color: "#2b3844"
+            color: "#303642"
         }
 
-        ColumnLayout {
-            id: controlsSlot
-
-            Layout.fillWidth: true
-            spacing: 0
-        }
-
-        RowLayout {
+        GridLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 0
+            columns: 5
+            columnSpacing: 0
+            rowSpacing: 0
 
-            ColumnLayout {
-                id: mainContentSlot
+            PaneSlot {
+                Layout.fillHeight: true
+                Layout.minimumWidth: 200
+                Layout.preferredWidth: 240
+                Layout.maximumWidth: 280
+                Layout.rowSpan: 1
 
+                ColumnLayout {
+                    id: leftSidebarSlot
+
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 6
+                }
+            }
+
+            VerticalSeparator {
+                Layout.fillHeight: true
+            }
+
+            Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.preferredWidth: 3
-                spacing: 0
+
+                ColumnLayout {
+                    id: centerContentSlot
+
+                    anchors.fill: parent
+                    spacing: 0
+                }
             }
 
-            Rectangle {
+            VerticalSeparator {
                 Layout.fillHeight: true
-                Layout.preferredWidth: 1
-                color: "#2b3844"
             }
 
-            ColumnLayout {
-                id: sideDockSlot
-
+            PaneSlot {
                 Layout.fillHeight: true
-                Layout.preferredWidth: 360
+                Layout.minimumWidth: 220
+                Layout.preferredWidth: 260
+                Layout.maximumWidth: 300
+
+                ColumnLayout {
+                    id: rightSidebarSlot
+
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 6
+                }
+            }
+
+            HorizontalSeparator {
+                Layout.columnSpan: 5
+                Layout.fillWidth: true
+            }
+
+            PaneSlot {
+                Layout.minimumWidth: 200
+                Layout.preferredWidth: 240
+                Layout.maximumWidth: 280
+                Layout.preferredHeight: 190
+                Layout.minimumHeight: 160
+                Layout.maximumHeight: 210
+
+                ColumnLayout {
+                    id: leftBottomSlot
+
+                    anchors.fill: parent
+                    spacing: 0
+                }
+            }
+
+            VerticalSeparator {
+                Layout.fillHeight: true
+            }
+
+            PaneSlot {
+                Layout.fillWidth: true
+                Layout.columnSpan: 3
+                Layout.preferredHeight: 190
+                Layout.minimumHeight: 160
+                Layout.maximumHeight: 210
+
+                ColumnLayout {
+                    id: bottomContentSlot
+
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 6
+                }
             }
         }
+    }
+
+    component PaneSlot: Rectangle {
+        radius: 0
+        color: "#141820"
+        clip: true
+    }
+
+    component VerticalSeparator: Rectangle {
+        Layout.preferredWidth: 1
+        color: "#303642"
+    }
+
+    component HorizontalSeparator: Rectangle {
+        Layout.preferredHeight: 1
+        color: "#303642"
     }
 }
