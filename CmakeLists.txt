@@ -191,8 +191,11 @@ qt_add_qml_module(travis_app
         qml/components/PlaybackSurface.qml
         qml/components/PreviewSurface.qml
         qml/components/inspection/avDock/InspectionAvDock.qml
+        qml/components/inspection/centerPanel/InspectionPreviewPanel.qml
         qml/components/inspection/header/RecordingControl.qml
         qml/components/inspection/InspectionWorkspaceContent.qml
+        qml/components/inspection/leftPanel/InspectionTreePanel.qml
+        qml/components/inspection/rightPanel/InspectionDetailsPanel.qml
         qml/components/projects/ProjectActionButton.qml
         qml/components/projects/ProjectCard.qml
         qml/components/projects/ProjectCreatePanel.qml

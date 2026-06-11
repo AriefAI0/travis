@@ -4,7 +4,10 @@ import QtQuick.Layouts
 
 import ".."
 import "avDock"
+import "centerPanel"
 import "header"
+import "leftPanel"
+import "rightPanel"
 import "../../layouts"
 
 // Composes the inspection workspace slots while keeping backend work in viewmodels.
@@ -114,64 +117,10 @@ Item {
         ]
 
         leftSidebar: [
-            Label {
-                Layout.fillWidth: true
-                color: "#78818f"
-                font.bold: true
-                font.pixelSize: 10
-                text: "INSPECTION TREE"
-            },
-
-            Label {
-                Layout.fillWidth: true
-                visible: inspectionContextViewModel.inspectionItems.length === 0
-                color: "#78818f"
-                text: inspectionContextViewModel.loading ? "Loading structure..." : "No inspection items."
-                wrapMode: Text.Wrap
-            },
-
-            ListView {
+            InspectionTreePanel {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                clip: true
-                spacing: 4
-                model: inspectionContextViewModel.inspectionItems
-
-                delegate: Button {
-                    width: ListView.view.width
-                    height: 30
-                    text: modelData.itemLabel
-                    onClicked: inspectionContextViewModel.selectItem(modelData.itemId)
-
-                    contentItem: ColumnLayout {
-                        spacing: 1
-
-                        Label {
-                            Layout.fillWidth: true
-                            color: modelData.itemId === inspectionContextViewModel.selectedItemId ? "#e6e8eb" : "#c9ced6"
-                            font.pixelSize: 12
-                            text: modelData.itemLabel
-                            elide: Text.ElideRight
-                        }
-
-                        Label {
-                            Layout.fillWidth: true
-                            color: "#78818f"
-                            font.pixelSize: 10
-                            text: `${modelData.assetName} / ${modelData.componentName}`
-                            elide: Text.ElideRight
-                        }
-                    }
-
-                    background: Rectangle {
-                        radius: 4
-                        color: modelData.itemId === inspectionContextViewModel.selectedItemId
-                            ? "#3b2227"
-                            : (parent.hovered ? "#20242d" : "transparent")
-                        border.color: modelData.itemId === inspectionContextViewModel.selectedItemId ? "#c1272d" : "transparent"
-                        border.width: 1
-                    }
-                }
+                inspectionContextViewModel: inspectionContextViewModel
             }
         ]
 
@@ -187,84 +136,20 @@ Item {
         ]
 
         centerContent: [
-            Rectangle {
+            InspectionPreviewPanel {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: "#000000"
-
-                PreviewSurface {
-                    anchors.fill: parent
-                    previewController: root.previewController
-                }
+                previewController: root.previewController
             }
         ]
 
         rightSidebar: [
-            Label {
+            InspectionDetailsPanel {
+                id: inspectionDetailsPanel
+
                 Layout.fillWidth: true
-                color: "#78818f"
-                font.bold: true
-                font.pixelSize: 10
-                text: "INSPECTION DETAILS"
-            },
-
-            Label {
-                Layout.fillWidth: true
-                color: "#e6e8eb"
-                font.bold: true
-                font.pixelSize: 14
-                text: inspectionContextViewModel.selectedItemId > 0
-                    ? inspectionContextViewModel.selectedItem.itemLabel
-                    : "Select an inspection item"
-                wrapMode: Text.Wrap
-            },
-
-            Label {
-                Layout.fillWidth: true
-                color: "#a8b0bd"
-                text: inspectionContextViewModel.selectedItemId > 0
-                    ? `${inspectionContextViewModel.selectedItem.assetName} / ${inspectionContextViewModel.selectedItem.componentName}`
-                    : "Choose an item from the inspection tree to enable clipping."
-                wrapMode: Text.Wrap
-            },
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#303642"
-            },
-
-            Label {
-                Layout.fillWidth: true
-                color: "#78818f"
-                font.bold: true
-                font.pixelSize: 10
-                text: "TASK TOOLS"
-            },
-
-            GridLayout {
-                Layout.fillWidth: true
-                columns: 2
-                columnSpacing: 6
-                rowSpacing: 6
-
-                Repeater {
-                    model: ["GVI", "CVI", "MGI", "FMD"]
-
-                    Button {
-                        Layout.fillWidth: true
-                        text: modelData
-                        enabled: inspectionContextViewModel.selectedItemId > 0
-                        onClicked: inspectionTypeField.text = modelData
-                    }
-                }
-            },
-
-            Label {
-                Layout.fillWidth: true
-                color: "#78818f"
-                text: "Task tools are placeholders until detailed Electron task forms are migrated."
-                wrapMode: Text.Wrap
+                Layout.fillHeight: true
+                inspectionContextViewModel: inspectionContextViewModel
             }
         ]
 
@@ -341,12 +226,11 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
 
-                TextField {
-                    id: inspectionTypeField
-
+                Label {
                     Layout.preferredWidth: 90
-                    text: "GVI"
-                    placeholderText: "Type"
+                    color: "#a8b0bd"
+                    text: inspectionDetailsPanel.inspectionTypeText
+                    elide: Text.ElideRight
                 }
 
                 TextField {
@@ -359,12 +243,12 @@ Item {
                 Button {
                     text: "Start Clip"
                     enabled: root.canStartClip() &&
-                        inspectionTypeField.text.trim().length > 0 &&
+                        inspectionDetailsPanel.inspectionTypeText.trim().length > 0 &&
                         clipOutputPathField.text.trim().length > 0
                     onClicked: {
                         recordingViewModel.startInspectionClip(
                             inspectionContextViewModel.selectedItemId,
-                            inspectionTypeField.text,
+                            inspectionDetailsPanel.inspectionTypeText,
                             clipOutputPathField.text
                         )
                     }
