@@ -30,6 +30,12 @@ WorkspaceShellLayout {
         }
     }
 
+    function stopPlaybackRoute() {
+        if (playbackSurfaceController) {
+            playbackSurfaceController.stopPlayback()
+        }
+    }
+
     title: "Playback Workspace"
     subtitle: masterVideoId > 0
         ? `Reviewing master video ${masterVideoId}`
@@ -63,8 +69,6 @@ WorkspaceShellLayout {
     Component.onCompleted: loadPlaybackRoute()
 
     Component.onDestruction: {
-        if (playbackSurfaceController) {
-            playbackSurfaceController.stopPlayback()
-        }
+        root.stopPlaybackRoute()
     }
 }
