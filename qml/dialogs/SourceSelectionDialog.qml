@@ -12,9 +12,12 @@ Dialog {
     property var sourceDiscoveryViewModel
     property bool manualMode: false
 
-    title: "Add Video Source"
+    parent: Overlay.overlay
+    title: "Video Source"
     modal: true
     width: 480
+    x: parent ? Math.round((parent.width - width) / 2) : 0
+    y: parent ? Math.round((parent.height - height) / 2) : 0
 
     function openForCurrentSource() {
         sourceLabelField.text = recordingViewModel ? recordingViewModel.sourceLabel : ""
@@ -233,7 +236,7 @@ Dialog {
         standardButtons: DialogButtonBox.Cancel | DialogButtonBox.Ok
 
         Component.onCompleted: {
-            standardButton(DialogButtonBox.Ok).text = "Apply Source"
+            standardButton(DialogButtonBox.Ok).text = "Add Source"
             standardButton(DialogButtonBox.Ok).enabled = root.canApply()
         }
 

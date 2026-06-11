@@ -31,6 +31,23 @@ Rectangle {
         audioMeterViewModel.syncAudioSlots(recordingViewModel.audioSlots, root.activeTabIndex === 1)
     }
 
+    function removeVideoSource() {
+        if (root.previewController) {
+            root.previewController.stopPreview()
+        }
+
+        if (!root.recordingViewModel) {
+            return
+        }
+
+        root.recordingViewModel.sourceKind = ""
+        root.recordingViewModel.sourceName = ""
+        root.recordingViewModel.sourceLabel = ""
+        root.recordingViewModel.devicePath = ""
+        root.recordingViewModel.sourceElement = ""
+        root.recordingViewModel.urlAddress = ""
+    }
+
     onActiveTabIndexChanged: syncAudioMeters()
 
     SourceSelectionDialog {
@@ -105,6 +122,7 @@ Rectangle {
                     previewController: root.previewController
                     sourceDiscoveryViewModel: root.sourceDiscoveryViewModel
                     onOpenSourceRequested: sourceSelectionDialog.openForCurrentSource()
+                    onRemoveSourceRequested: root.removeVideoSource()
                     onStopPreviewRequested: root.previewController.stopPreview()
                 }
 

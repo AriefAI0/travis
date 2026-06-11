@@ -12,6 +12,7 @@ ColumnLayout {
     property var sourceDiscoveryViewModel
 
     signal openSourceRequested()
+    signal removeSourceRequested()
     signal stopPreviewRequested()
 
     spacing: 10
@@ -98,9 +99,17 @@ ColumnLayout {
         Button {
             implicitHeight: 24
             Layout.fillWidth: true
-            text: root.hasVideoSource() ? "Change Source" : "Add Source"
+            text: "+ Source"
             enabled: recordingViewModel && sourceDiscoveryViewModel
             onClicked: root.openSourceRequested()
+        }
+
+        Button {
+            implicitHeight: 24
+            Layout.fillWidth: true
+            text: "- Source"
+            enabled: recordingViewModel && root.hasVideoSource()
+            onClicked: root.removeSourceRequested()
         }
 
         Button {
@@ -109,13 +118,6 @@ ColumnLayout {
             text: "Stop Preview"
             enabled: previewController && root.hasVideoSource()
             onClicked: root.stopPreviewRequested()
-        }
-
-        Button {
-            implicitHeight: 24
-            Layout.fillWidth: true
-            text: "Popout"
-            enabled: false
         }
     }
 }
