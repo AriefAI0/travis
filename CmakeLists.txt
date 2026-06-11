@@ -206,7 +206,6 @@ qt_add_qml_module(travis_app
         qml/components/projects/ProjectCreatePanel.qml
         qml/components/projects/ProjectPageHeader.qml
         qml/components/projects/ProjectStatTile.qml
-        qml/components/projectWorkspace/StructureTreePanel.qml
         qml/components/projectWorkspace/components/DetailCard.qml
         qml/components/projectWorkspace/components/ReviewRecordingCard.qml
         qml/components/projectWorkspace/components/StatBox.qml
@@ -221,6 +220,7 @@ qt_add_qml_module(travis_app
         qml/components/projectWorkspace/panels/WorkspaceRightPanel.qml
         qml/components/projectWorkspace/summaries/ProjectRecordingsSummary.qml
         qml/components/projectWorkspace/summaries/SelectionSummaryPanel.qml
+        qml/components/workspaceCommon/StructureTreePanel.qml
         qml/components/StatusBanner.qml
         qml/dialogs/AdvancedAudioPropertiesDialog.qml
         qml/dialogs/SourceSelectionDialog.qml

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 import "../components/projectWorkspace"
 import "../components/projectWorkspace/panels"
+import "../components/workspaceCommon"
 
 // Project workspace page following the Electron layout with native QML panels.
 

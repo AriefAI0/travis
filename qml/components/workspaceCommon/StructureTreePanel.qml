@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import "../projectWorkspace"
+
 // Tree navigation for project assets, components, and inspection items.
 
 WorkspacePanel {
