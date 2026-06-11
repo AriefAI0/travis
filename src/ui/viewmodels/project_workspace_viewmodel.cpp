@@ -122,6 +122,10 @@ QVariantList ProjectWorkspaceViewModel::structureTree() const {
     return structureTree_;
 }
 
+travis::ui::viewmodels::StructureTreeModel* ProjectWorkspaceViewModel::structureTreeModel() {
+    return &structureTreeModel_;
+}
+
 QVariantList ProjectWorkspaceViewModel::sessions() const {
     return sessions_;
 }
@@ -163,6 +167,7 @@ bool ProjectWorkspaceViewModel::loadProject(qint64 projectId) {
         projectId_ = 0;
         project_.clear();
         structureTree_.clear();
+        structureTreeModel_.clear();
         sessions_.clear();
         masterVideos_.clear();
         assetCount_ = 0;
@@ -214,6 +219,7 @@ bool ProjectWorkspaceViewModel::loadProject(qint64 projectId) {
     projectId_ = projectId;
     project_ = toProjectVariant(*project);
     structureTree_ = nextStructureTree;
+    structureTreeModel_.setStructure(structureTree);
     sessions_ = nextSessions;
     masterVideos_ = nextMasterVideos;
     assetCount_ = structureTree.size();

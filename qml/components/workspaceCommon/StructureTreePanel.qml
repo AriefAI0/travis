@@ -10,6 +10,7 @@ WorkspacePanel {
     id: root
 
     property var assets: []
+    property var treeModel: null
     property string selectedKey: "project"
     signal projectSelected()
     signal assetSelected(var asset)
@@ -61,101 +62,70 @@ WorkspacePanel {
             wrapMode: Text.Wrap
         },
 
-        ListView {
+        TreeView {
+            id: structureTree
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            spacing: 2
-            model: root.assets
+            model: root.treeModel
+            selectionModel: ItemSelectionModel {}
 
-            delegate: ColumnLayout {
-                id: assetDelegate
+            delegate: TreeViewDelegate {
+                id: treeDelegate
 
-                property var assetData: modelData
+                required property string nodeLabel
+                required property string type
+                required property string key
+                required property var asset
+                required property var component
+                required property var item
 
-                width: ListView.view.width
-                spacing: 2
+                implicitWidth: structureTree.width
+                implicitHeight: 26
+                indentation: 14
 
-                TreeNodeButton {
-                    Layout.fillWidth: true
-                    nodeText: assetDelegate.assetData.name
-                    selected: root.selectedKey === "asset:" + assetDelegate.assetData.assetId
-                    onClicked: root.assetSelected(assetDelegate.assetData)
+                contentItem: Label {
+                    leftPadding: treeDelegate.depth * treeDelegate.indentation + 22
+                    rightPadding: 6
+                    color: treeDelegate.key === root.selectedKey
+                        ? "#e6e8eb"
+                        : treeDelegate.type === "item" ? "#a8b0bd" : "#c9ced6"
+                    font.pixelSize: 12
+                    text: treeDelegate.nodeLabel
+                    elide: Text.ElideRight
+                    verticalAlignment: Text.AlignVCenter
                 }
 
-                Repeater {
-                    model: assetDelegate.assetData.components
+                indicator: Label {
+                    x: treeDelegate.depth * treeDelegate.indentation + 6
+                    width: 12
+                    height: treeDelegate.height
+                    visible: treeDelegate.hasChildren
+                    color: "#9fb0be"
+                    text: treeDelegate.expanded ? "v" : ">"
+                    verticalAlignment: Text.AlignVCenter
+                }
 
-                    delegate: ColumnLayout {
-                        id: componentDelegate
+                background: Rectangle {
+                    radius: 4
+                    color: treeDelegate.key === root.selectedKey
+                        ? "#3b2227"
+                        : treeDelegate.hovered ? "#20242d" : "transparent"
+                    border.color: treeDelegate.key === root.selectedKey ? "#c1272d" : "transparent"
+                    border.width: 1
+                }
 
-                        property var componentData: modelData
-
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        TreeNodeButton {
-                            Layout.fillWidth: true
-                            nodeIndent: 14
-                            nodeText: componentDelegate.componentData.name
-                            selected: root.selectedKey === "component:" + componentDelegate.componentData.componentId
-                            onClicked: root.componentSelected(
-                                assetDelegate.assetData,
-                                componentDelegate.componentData
-                            )
-                        }
-
-                        Repeater {
-                            model: componentDelegate.componentData.items
-
-                            delegate: TreeNodeButton {
-                                Layout.fillWidth: true
-                                nodeIndent: 28
-                                leaf: true
-                                nodeText: modelData.itemLabel
-                                selected: root.selectedKey === "item:" + modelData.itemId
-                                onClicked: {
-                                    root.itemSelected(
-                                        assetDelegate.assetData,
-                                        componentDelegate.componentData,
-                                        modelData
-                                    )
-                                }
-                            }
-                        }
+                onClicked: {
+                    if (treeDelegate.type === "asset") {
+                        root.assetSelected(treeDelegate.asset)
+                    } else if (treeDelegate.type === "component") {
+                        root.componentSelected(treeDelegate.asset, treeDelegate.component)
+                    } else if (treeDelegate.type === "item") {
+                        root.itemSelected(treeDelegate.asset, treeDelegate.component, treeDelegate.item)
                     }
                 }
             }
         }
     ]
-
-    component TreeNodeButton: Button {
-        id: nodeButton
-
-        property string nodeText: ""
-        property bool selected: false
-        property bool leaf: false
-        property int nodeIndent: 0
-
-        implicitHeight: 26
-        text: nodeText
-        hoverEnabled: true
-
-        contentItem: Label {
-            leftPadding: nodeButton.nodeIndent + 6
-            rightPadding: 6
-            color: nodeButton.selected ? "#e6e8eb" : (nodeButton.leaf ? "#a8b0bd" : "#c9ced6")
-            font.pixelSize: 12
-            text: nodeButton.text
-            elide: Text.ElideRight
-            verticalAlignment: Text.AlignVCenter
-        }
-
-        background: Rectangle {
-            radius: 4
-            color: nodeButton.selected ? "#3b2227" : (nodeButton.hovered ? "#20242d" : "transparent")
-            border.color: nodeButton.selected ? "#c1272d" : "transparent"
-            border.width: 1
-        }
-    }
 }

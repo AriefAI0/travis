@@ -120,6 +120,7 @@ Item {
                 Layout.preferredWidth: 250
                 Layout.fillHeight: true
                 assets: projectWorkspaceViewModel.structureTree
+                treeModel: projectWorkspaceViewModel.structureTreeModel
                 selectedKey: root.selectedKey
                 onProjectSelected: root.selectProject()
                 onAssetSelected: function(asset) { root.selectAsset(asset) }
