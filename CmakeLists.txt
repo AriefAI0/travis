@@ -201,6 +201,11 @@ qt_add_qml_module(travis_app
         qml/components/inspection/InspectionWorkspaceContent.qml
         qml/components/inspection/leftPanel/InspectionTreePanel.qml
         qml/components/inspection/rightPanel/InspectionDetailsPanel.qml
+        qml/components/playback/centerPanel/PlaybackVideoPanel.qml
+        qml/components/playback/evidenceExplorer/PlaybackEvidenceExplorer.qml
+        qml/components/playback/PlaybackWorkspaceContent.qml
+        qml/components/playback/rightPanel/PlaybackMetadataPanel.qml
+        qml/components/playback/timeline/PlaybackTimelinePanel.qml
         qml/components/projects/ProjectActionButton.qml
         qml/components/projects/ProjectCard.qml
         qml/components/projects/ProjectCreatePanel.qml

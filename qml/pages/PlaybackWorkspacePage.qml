@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import "../components"
+import "../components/playback"
 import "../layouts"
 
 // Shows persisted playback state for the selected master video route.
@@ -50,161 +50,11 @@ WorkspaceShellLayout {
     ]
 
     body: [
-        StatusBanner {
-            Layout.fillWidth: true
-            message: playbackViewModel && playbackViewModel.lastError.length > 0
-                ? playbackViewModel.lastError
-                : playbackSurfaceController ? playbackSurfaceController.lastError : ""
-            error: true
-        },
-
-        StatusBanner {
-            Layout.fillWidth: true
-            message: playbackViewModel ? playbackViewModel.statusMessage : ""
-            error: false
-        },
-
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 260
-            radius: 0
-            color: "#101720"
-            border.color: "#31404d"
-            border.width: 1
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 8
-
-                Label {
-                    color: "#f4f7fa"
-                    font.pixelSize: 22
-                    text: playbackViewModel && playbackViewModel.selectedMasterVideoId > 0
-                        ? `Master Video #${playbackViewModel.selectedMasterVideoId}`
-                        : "No master video loaded"
-                }
-
-                Label {
-                    Layout.fillWidth: true
-                    color: "#9fb1bf"
-                    text: playbackViewModel && playbackViewModel.selectedMasterVideoPath.length > 0
-                        ? playbackViewModel.selectedMasterVideoPath
-                        : "Open playback from a project video list to load persisted media metadata."
-                    wrapMode: Text.Wrap
-                }
-
-                PlaybackSurface {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    playbackController: playbackSurfaceController
-
-                    Label {
-                        anchors.centerIn: parent
-                        visible: !playbackSurfaceController || !playbackSurfaceController.playbackActive
-                        color: "#758796"
-                        text: playbackViewModel && playbackViewModel.selectedMasterVideoPath.length > 0
-                            ? "Press Play to start native playback"
-                            : "Load a master video before playback"
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    Button {
-                        text: "Play"
-                        enabled: playbackSurfaceController &&
-                            playbackViewModel &&
-                            playbackViewModel.selectedMasterVideoPath.length > 0 &&
-                            !playbackSurfaceController.playbackActive
-                        onClicked: playbackSurfaceController.startPlayback(
-                            playbackViewModel.selectedMasterVideoPath
-                        )
-                    }
-
-                    Button {
-                        text: "Stop"
-                        enabled: playbackSurfaceController && playbackSurfaceController.playbackActive
-                        onClicked: playbackSurfaceController.stopPlayback()
-                    }
-
-                    Label {
-                        Layout.fillWidth: true
-                        color: "#9fb1bf"
-                        text: playbackSurfaceController && playbackSurfaceController.playbackActive
-                            ? "Playback active"
-                            : "Playback stopped"
-                    }
-                }
-            }
-        },
-
-        Rectangle {
+        PlaybackWorkspaceContent {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: 0
-            color: "#121922"
-            border.color: "#31404d"
-            border.width: 1
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 8
-
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    Label {
-                        color: "#f4f7fa"
-                        font.pixelSize: 18
-                        text: "Timeline Thumbnails"
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    Label {
-                        color: "#9fb1bf"
-                        text: playbackViewModel
-                            ? `${playbackViewModel.timelineThumbnailPaths.length} item(s)`
-                            : "0 item(s)"
-                    }
-                }
-
-                ListView {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-                    model: playbackViewModel ? playbackViewModel.timelineThumbnailPaths : []
-
-                    delegate: Rectangle {
-                        width: ListView.view.width
-                        height: 44
-                        color: index % 2 === 0 ? "#17212a" : "#111922"
-
-                        Label {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            verticalAlignment: Text.AlignVCenter
-                            color: "#dce7ef"
-                            elide: Text.ElideMiddle
-                            text: modelData
-                        }
-                    }
-                }
-
-                Label {
-                    Layout.fillWidth: true
-                    visible: playbackViewModel && playbackViewModel.timelineThumbnailPaths.length === 0
-                    color: "#9fb1bf"
-                    text: "No thumbnails have been generated for this master video yet."
-                    wrapMode: Text.Wrap
-                }
-            }
+            playbackViewModel: playbackViewModel
+            playbackSurfaceController: playbackSurfaceController
         }
     ]
 
