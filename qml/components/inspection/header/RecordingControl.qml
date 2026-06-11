@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// Provides the core recording action buttons bound to the recording viewmodel.
+// Provides inspection recording action buttons bound to the recording viewmodel.
 
 RowLayout {
     id: root

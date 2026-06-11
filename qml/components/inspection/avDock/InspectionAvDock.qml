@@ -2,9 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import "../dialogs"
+import "../../../dialogs"
 
-// Hosts the workspace A/V dock with inline audio slots and popout dialogs for video and advanced audio settings.
+// Hosts the inspection A/V dock with video source dialogs and inline audio slots.
 
 Rectangle {
     id: root

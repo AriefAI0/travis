@@ -187,10 +187,12 @@ qt_add_qml_module(travis_app
     VERSION 1.0
     QML_FILES
         qml/Main.qml
-        qml/components/AvDock.qml
         qml/components/PlaybackPanel.qml
         qml/components/PlaybackSurface.qml
         qml/components/PreviewSurface.qml
+        qml/components/inspection/avDock/InspectionAvDock.qml
+        qml/components/inspection/header/RecordingControl.qml
+        qml/components/inspection/InspectionWorkspaceContent.qml
         qml/components/projects/ProjectActionButton.qml
         qml/components/projects/ProjectCard.qml
         qml/components/projects/ProjectCreatePanel.qml
@@ -201,7 +203,6 @@ qt_add_qml_module(travis_app
         qml/components/projectWorkspace/WorkspaceHeader.qml
         qml/components/projectWorkspace/WorkspacePanel.qml
         qml/components/projectWorkspace/WorkspaceRightPanel.qml
-        qml/components/RecordingControls.qml
         qml/components/StatusBanner.qml
         qml/dialogs/AdvancedAudioPropertiesDialog.qml
         qml/dialogs/SourceSelectionDialog.qml

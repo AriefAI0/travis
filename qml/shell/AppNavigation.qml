@@ -18,7 +18,7 @@ QtObject {
             return
         }
 
-        stackView.replace(component, properties || {})
+        stackView.replace(component, properties || {}, StackView.Immediate)
     }
 
     function goProjects() {
