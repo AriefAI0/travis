@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import ".."
-import "../projects"
+import "../../projects"
 
 // Center workspace details and create forms for the active structure selection.
 

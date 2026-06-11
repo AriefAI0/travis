@@ -207,10 +207,12 @@ qt_add_qml_module(travis_app
         qml/components/projects/ProjectPageHeader.qml
         qml/components/projects/ProjectStatTile.qml
         qml/components/projectWorkspace/StructureTreePanel.qml
-        qml/components/projectWorkspace/WorkspaceCenterPanel.qml
+        qml/components/projectWorkspace/panels/WorkspaceCenterPanel.qml
         qml/components/projectWorkspace/WorkspaceHeader.qml
         qml/components/projectWorkspace/WorkspacePanel.qml
-        qml/components/projectWorkspace/WorkspaceRightPanel.qml
+        qml/components/projectWorkspace/panels/WorkspaceRightPanel.qml
+        qml/components/projectWorkspace/summaries/ProjectRecordingsSummary.qml
+        qml/components/projectWorkspace/summaries/SelectionSummaryPanel.qml
         qml/components/StatusBanner.qml
         qml/dialogs/AdvancedAudioPropertiesDialog.qml
         qml/dialogs/SourceSelectionDialog.qml
