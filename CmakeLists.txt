@@ -207,6 +207,10 @@ qt_add_qml_module(travis_app
         qml/components/projects/ProjectPageHeader.qml
         qml/components/projects/ProjectStatTile.qml
         qml/components/projectWorkspace/StructureTreePanel.qml
+        qml/components/projectWorkspace/components/DetailCard.qml
+        qml/components/projectWorkspace/components/ReviewRecordingCard.qml
+        qml/components/projectWorkspace/components/StatBox.qml
+        qml/components/projectWorkspace/components/StructureTable.qml
         qml/components/projectWorkspace/panels/WorkspaceCenterPanel.qml
         qml/components/projectWorkspace/WorkspaceHeader.qml
         qml/components/projectWorkspace/WorkspacePanel.qml

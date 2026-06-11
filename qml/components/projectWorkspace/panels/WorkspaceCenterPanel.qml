@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import ".."
+import "../components"
 import "../../projects"
 
 // Center workspace details and create forms for the active structure selection.
@@ -169,46 +170,10 @@ WorkspacePanel {
                 Repeater {
                     model: root.recordings
 
-                    delegate: Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: recordingRow.implicitHeight + 16
-                        radius: 6
-                        color: "#20242d"
-                        border.color: "#303642"
-
-                        RowLayout {
-                            id: recordingRow
-
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 8
-
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 2
-
-                                Label {
-                                    Layout.fillWidth: true
-                                    color: "#e6e8eb"
-                                    font.pixelSize: 12
-                                    text: modelData.sourceName || ("Master Video #" + modelData.masterVideoId)
-                                    elide: Text.ElideRight
-                                }
-
-                                Label {
-                                    Layout.fillWidth: true
-                                    color: "#78818f"
-                                    font.pixelSize: 11
-                                    text: modelData.fileUrl
-                                    elide: Text.ElideMiddle
-                                }
-                            }
-
-                            ProjectActionButton {
-                                text: "Open review"
-                                enabled: modelData.masterVideoId > 0 && modelData.status === "finalized"
-                                onClicked: root.openPlaybackRequested(modelData.masterVideoId)
-                            }
+                    delegate: ReviewRecordingCard {
+                        recording: modelData
+                        onOpenPlaybackRequested: function(masterVideoId) {
+                            root.openPlaybackRequested(masterVideoId)
                         }
                     }
                 }
@@ -359,154 +324,4 @@ WorkspacePanel {
         }
     ]
 
-    component DetailCard: Rectangle {
-        id: card
-
-        property string title: ""
-        property string meta: ""
-        default property alias content: cardContent.data
-
-        implicitHeight: cardColumn.implicitHeight + 24
-        radius: 8
-        color: "#20242d"
-        border.color: "#303642"
-        border.width: 1
-
-        ColumnLayout {
-            id: cardColumn
-
-            anchors.fill: parent
-            anchors.margins: 12
-            spacing: 10
-
-            RowLayout {
-                Layout.fillWidth: true
-
-                Label {
-                    Layout.fillWidth: true
-                    color: "#e6e8eb"
-                    font.bold: true
-                    font.pixelSize: 14
-                    text: card.title
-                }
-
-                Label {
-                    visible: card.meta.length > 0
-                    color: "#78818f"
-                    font.pixelSize: 11
-                    text: card.meta
-                }
-            }
-
-            ColumnLayout {
-                id: cardContent
-
-                Layout.fillWidth: true
-                spacing: 8
-            }
-        }
-    }
-
-    component StatBox: Rectangle {
-        property string label: ""
-        property string value: ""
-
-        Layout.fillWidth: true
-        implicitHeight: 58
-        radius: 6
-        color: "#252a33"
-        border.color: "#303642"
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 8
-            spacing: 3
-
-            Label {
-                color: "#78818f"
-                font.pixelSize: 10
-                text: label
-            }
-
-            Label {
-                Layout.fillWidth: true
-                color: "#e6e8eb"
-                font.bold: true
-                font.pixelSize: 13
-                text: value
-                elide: Text.ElideRight
-            }
-        }
-    }
-
-    component StructureTable: ColumnLayout {
-        id: table
-
-        property var rows: []
-        property string emptyText: ""
-        property string firstHeader: ""
-        property string secondHeader: ""
-        property string thirdHeader: ""
-        property var firstValue
-        property var secondValue
-        property var thirdValue
-        signal rowSelected(var row)
-
-        spacing: 0
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 0
-
-            TableCell { text: table.firstHeader; header: true }
-            TableCell { text: table.secondHeader; header: true }
-            TableCell { text: table.thirdHeader; header: true }
-        }
-
-        Label {
-            Layout.fillWidth: true
-            visible: table.rows.length === 0
-            topPadding: 10
-            color: "#78818f"
-            font.pixelSize: 12
-            text: table.emptyText
-        }
-
-        Repeater {
-            model: table.rows
-
-            delegate: Button {
-                Layout.fillWidth: true
-                implicitHeight: 32
-                flat: true
-                onClicked: table.rowSelected(modelData)
-
-                contentItem: RowLayout {
-                    spacing: 0
-                    TableCell { text: table.firstValue(modelData) }
-                    TableCell { text: table.secondValue(modelData) }
-                    TableCell { text: table.thirdValue(modelData) }
-                }
-
-                background: Rectangle {
-                    color: parent.hovered ? "#252a33" : "transparent"
-                    border.color: "#303642"
-                    border.width: 1
-                }
-            }
-        }
-    }
-
-    component TableCell: Label {
-        property bool header: false
-
-        Layout.fillWidth: true
-        leftPadding: 8
-        rightPadding: 8
-        color: header ? "#78818f" : "#c9ced6"
-        font.bold: header
-        font.pixelSize: header ? 10 : 12
-        elide: Text.ElideRight
-        verticalAlignment: Text.AlignVCenter
-    }
 }
