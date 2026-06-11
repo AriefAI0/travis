@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 import ".."
 import "../details"
+import "../summaries"
 
 // Switches between project workspace detail views for the active structure selection.
 
@@ -44,36 +45,16 @@ WorkspacePanel {
     }
 
     content: [
-        ColumnLayout {
+        WorkspaceSelectionHeader {
             Layout.fillWidth: true
-            spacing: 4
-
-            Label {
-                color: "#78818f"
-                font.bold: true
-                font.pixelSize: 11
-                text: root.selectedType.toUpperCase() + " VIEW"
-            }
-
-            Label {
-                Layout.fillWidth: true
-                color: "#e6e8eb"
-                font.bold: true
-                font.pixelSize: 18
-                text: {
-                    if (root.selectedType === "asset" && root.selectedAsset !== null) {
-                        return root.selectedAsset.name
-                    }
-                    if (root.selectedType === "component" && root.selectedComponent !== null) {
-                        return root.selectedComponent.name
-                    }
-                    if (root.selectedType === "item" && root.selectedItem !== null) {
-                        return root.selectedItem.itemLabel
-                    }
-                    return root.project.title || "Project overview"
-                }
-                elide: Text.ElideRight
-            }
+            project: root.project
+            selectedType: root.selectedType
+            selectedAsset: root.selectedAsset
+            selectedComponent: root.selectedComponent
+            selectedItem: root.selectedItem
+            assetCount: root.assetCount
+            componentCount: root.componentCount
+            itemCount: root.itemCount
         },
 
         StatusBanner {

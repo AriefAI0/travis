@@ -220,6 +220,7 @@ qt_add_qml_module(travis_app
         qml/components/projectWorkspace/panels/WorkspaceRightPanel.qml
         qml/components/projectWorkspace/summaries/ProjectRecordingsSummary.qml
         qml/components/projectWorkspace/summaries/SelectionSummaryPanel.qml
+        qml/components/projectWorkspace/summaries/WorkspaceSelectionHeader.qml
         qml/components/workspaceCommon/StructureTreePanel.qml
         qml/components/StatusBanner.qml
         qml/dialogs/AdvancedAudioPropertiesDialog.qml

@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import "../components"
 import "../../projects"
 
-// Project overview, asset creation, and review recording list.
+// Asset creation, structure list, and review recording list for the project.
 
 ColumnLayout {
     id: root
@@ -27,23 +27,6 @@ ColumnLayout {
     }
 
     spacing: 12
-
-    DetailCard {
-        Layout.fillWidth: true
-        title: "Project details"
-
-        GridLayout {
-            Layout.fillWidth: true
-            columns: 4
-            rowSpacing: 8
-            columnSpacing: 8
-
-            StatBox { label: "Document ID"; value: root.project.documentId || "-" }
-            StatBox { label: "Assets"; value: String(root.assetCount) }
-            StatBox { label: "Components"; value: String(root.componentCount) }
-            StatBox { label: "Items"; value: String(root.itemCount) }
-        }
-    }
 
     DetailCard {
         Layout.fillWidth: true

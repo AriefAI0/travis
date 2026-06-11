@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import ".."
 import "../summaries"
 
-// Context summary panel for the active project workspace selection.
+// Secondary project workspace rail. Primary selection details stay in the center panel.
 
 WorkspacePanel {
     id: root
@@ -24,7 +24,7 @@ WorkspacePanel {
             color: "#e6e8eb"
             font.bold: true
             font.pixelSize: 14
-            text: root.selectedType === "project" ? "Recordings" : "Selection summary"
+            text: root.selectedType === "project" ? "Recordings" : "Selection metrics"
         },
 
         ColumnLayout {
