@@ -50,6 +50,22 @@ Item {
         }
     }
 
+    function defaultClipOutputPath() {
+        const masterPath = recordingViewModel.activeMasterVideoPath || recordingViewModel.outputPath
+        if (!masterPath || masterPath.length === 0) {
+            return ""
+        }
+
+        const normalizedPath = masterPath.replace(/\\/g, "/")
+        const slashIndex = normalizedPath.lastIndexOf("/")
+        const directory = slashIndex >= 0 ? normalizedPath.slice(0, slashIndex + 1) : ""
+        const timestamp = Date.now()
+        const itemId = inspectionContextViewModel.selectedItemId
+        const typeName = inspectionDetailsPanel.inspectionTypeText.trim().toLowerCase()
+
+        return `${directory}clip-${itemId}-${typeName}-${timestamp}.mkv`
+    }
+
     InspectionWorkspaceLayout {
         anchors.fill: parent
         title: inspectionContextViewModel.project.title || "Inspection Workspace"
@@ -150,6 +166,17 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 inspectionContextViewModel: inspectionContextViewModel
+                recordingViewModel: root.recordingVm
+                onStartClipRequested: function(inspectionTypeName) {
+                    recordingViewModel.startInspectionClip(
+                        inspectionContextViewModel.selectedItemId,
+                        inspectionTypeName,
+                        root.defaultClipOutputPath()
+                    )
+                }
+                onStopClipRequested: function(clipId) {
+                    recordingViewModel.stopInspectionClip(clipId)
+                }
             }
         ]
 
@@ -159,130 +186,16 @@ Item {
                 color: "#78818f"
                 font.bold: true
                 font.pixelSize: 10
-                text: "RECORDER / RESERVED"
+                text: "EVENT / RECORDER PLACEHOLDER"
             },
 
-            StatusBanner {
-                Layout.fillWidth: true
-                message: inspectionContextViewModel.lastError.length > 0
-                    ? inspectionContextViewModel.lastError
-                    : recordingViewModel.lastError.length > 0
-                    ? recordingViewModel.lastError
-                    : previewSurfaceController.lastError
-                error: true
-            },
-
-            StatusBanner {
-                Layout.fillWidth: true
-                message: inspectionContextViewModel.statusMessage.length > 0
-                    ? inspectionContextViewModel.statusMessage
-                    : recordingViewModel.statusMessage.length > 0
-                    ? recordingViewModel.statusMessage
-                    : playbackViewModel.statusMessage
-                error: false
-            },
-
-            RowLayout {
-                Layout.fillWidth: true
-
-                ComboBox {
-                    Layout.preferredWidth: 220
-                    model: inspectionContextViewModel.sessions
-                    textRole: "name"
-                    valueRole: "sessionId"
-                    displayText: currentIndex >= 0 ? currentText : "Select session"
-                    enabled: root.projectId > 0 && inspectionContextViewModel.sessions.length > 0
-
-                    onActivated: {
-                        if (inspectionContextViewModel.selectSession(currentValue)) {
-                            root.applyInspectionSession()
-                        }
-                    }
-                }
-
-                TextField {
-                    id: sessionNameField
-
-                    Layout.preferredWidth: 180
-                    placeholderText: "New session name"
-                    enabled: root.projectId > 0
-                    onAccepted: createSessionButton.clicked()
-                }
-
-                Button {
-                    id: createSessionButton
-
-                    text: "Create Session"
-                    enabled: root.projectId > 0 && !inspectionContextViewModel.loading
-                    onClicked: {
-                        if (inspectionContextViewModel.createSession(sessionNameField.text)) {
-                            sessionNameField.clear()
-                            root.applyInspectionSession()
-                        }
-                    }
-                }
-            },
-
-            RowLayout {
-                Layout.fillWidth: true
-
-                Label {
-                    Layout.preferredWidth: 90
-                    color: "#a8b0bd"
-                    text: inspectionDetailsPanel.inspectionTypeText
-                    elide: Text.ElideRight
-                }
-
-                TextField {
-                    id: clipOutputPathField
-
-                    Layout.fillWidth: true
-                    placeholderText: "Clip output path"
-                }
-
-                Button {
-                    text: "Start Clip"
-                    enabled: root.canStartClip() &&
-                        inspectionDetailsPanel.inspectionTypeText.trim().length > 0 &&
-                        clipOutputPathField.text.trim().length > 0
-                    onClicked: {
-                        recordingViewModel.startInspectionClip(
-                            inspectionContextViewModel.selectedItemId,
-                            inspectionDetailsPanel.inspectionTypeText,
-                            clipOutputPathField.text
-                        )
-                    }
-                }
-
-                Button {
-                    text: "Stop Clip"
-                    enabled: recordingViewModel.activeClipId > 0
-                    onClicked: recordingViewModel.stopInspectionClip(recordingViewModel.activeClipId)
-                }
-            },
-
-            RowLayout {
-                Layout.fillWidth: true
-
-                TextField {
-                    Layout.preferredWidth: 180
-                    text: recordingViewModel.recordingId
-                    placeholderText: "Recording ID"
-                    onTextChanged: recordingViewModel.recordingId = text
-                }
-
-                TextField {
-                    Layout.fillWidth: true
-                    text: recordingViewModel.outputPath
-                    placeholderText: "C:/recordings/session-001/master.mkv"
-                    onTextChanged: recordingViewModel.outputPath = text
-                }
-            },
-
-            PlaybackPanel {
+            Label {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                playbackViewModel: root.playbackVm
+                color: "#78818f"
+                text: "This panel is reserved for the future event timeline, recorder feedback, and inspection history."
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.Wrap
             }
         ]
     }

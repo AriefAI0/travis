@@ -1,13 +1,18 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Provides the compact inspection workspace frame and slot geometry.
+// Provides fixed desktop pane placement so the preview owns the center area.
 
 Item {
     id: root
 
     property string title: "Inspection Workspace"
     property string subtitle: ""
+    property int headerHeight: 56
+    property int leftPaneWidth: 240
+    property int rightPaneWidth: 260
+    property int bottomPaneHeight: 260
+    property int separatorSize: 1
     property alias headerNavigation: headerNavigationSlot.data
     property alias headerStatus: headerStatusSlot.data
     property alias leftSidebar: leftSidebarSlot.data
@@ -21,172 +26,178 @@ Item {
         color: "#0f1117"
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 0
+    Rectangle {
+        id: headerPane
 
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 56
-            radius: 0
-            color: "#141820"
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: root.headerHeight
+        color: "#141820"
 
-            GridLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                columns: 3
-                columnSpacing: 8
-                rowSpacing: 0
+        Item {
+            anchors.fill: parent
+            anchors.margins: 8
 
-                ColumnLayout {
-                    id: headerNavigationSlot
+            ColumnLayout {
+                id: headerNavigationSlot
 
-                    Layout.minimumWidth: 180
-                    Layout.preferredWidth: 220
-                    Layout.maximumWidth: 260
-                    Layout.alignment: Qt.AlignVCenter
-                    spacing: 2
-                }
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                width: root.leftPaneWidth - 16
+                spacing: 2
+            }
 
-                ColumnLayout {
+            ColumnLayout {
+                anchors.left: headerNavigationSlot.right
+                anchors.leftMargin: 8
+                anchors.right: headerStatusSlot.left
+                anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
+
+                Text {
                     Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                    spacing: 2
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.title
-                        font.bold: true
-                        font.pixelSize: 14
-                        color: "#e6e8eb"
-                        elide: Text.ElideRight
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.subtitle
-                        font.pixelSize: 10
-                        color: "#78818f"
-                        elide: Text.ElideRight
-                    }
+                    text: root.title
+                    font.bold: true
+                    font.pixelSize: 14
+                    color: "#e6e8eb"
+                    elide: Text.ElideRight
                 }
 
-                ColumnLayout {
-                    id: headerStatusSlot
-
-                    Layout.minimumWidth: 300
-                    Layout.preferredWidth: 420
-                    Layout.maximumWidth: 520
-                    Layout.alignment: Qt.AlignVCenter
-                    spacing: 0
+                Text {
+                    Layout.fillWidth: true
+                    text: root.subtitle
+                    font.pixelSize: 10
+                    color: "#78818f"
+                    elide: Text.ElideRight
                 }
+            }
+
+            RowLayout {
+                id: headerStatusSlot
+
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(520, Math.max(320, root.width * 0.34))
+                spacing: 0
             }
         }
+    }
 
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: "#303642"
+    SeparatorLine {
+        id: headerSeparator
+
+        anchors.top: headerPane.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+    }
+
+    PaneSlot {
+        id: leftTopPane
+
+        anchors.top: headerSeparator.bottom
+        anchors.left: parent.left
+        anchors.bottom: middleSeparator.top
+        width: root.leftPaneWidth
+
+        ColumnLayout {
+            id: leftSidebarSlot
+
+            anchors.fill: parent
+            anchors.margins: 8
+            spacing: 6
         }
+    }
 
-        GridLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            columns: 5
-            columnSpacing: 0
-            rowSpacing: 0
+    VerticalSeparator {
+        id: leftSeparator
 
-            PaneSlot {
-                Layout.fillHeight: true
-                Layout.minimumWidth: 200
-                Layout.preferredWidth: 240
-                Layout.maximumWidth: 280
-                Layout.rowSpan: 1
+        anchors.top: headerSeparator.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: leftTopPane.right
+    }
 
-                ColumnLayout {
-                    id: leftSidebarSlot
+    Item {
+        id: centerPane
 
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 6
-                }
-            }
+        anchors.top: headerSeparator.bottom
+        anchors.left: leftSeparator.right
+        anchors.right: rightSeparator.left
+        anchors.bottom: middleSeparator.top
 
-            VerticalSeparator {
-                Layout.fillHeight: true
-            }
+        ColumnLayout {
+            id: centerContentSlot
 
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+            anchors.fill: parent
+            spacing: 0
+        }
+    }
 
-                ColumnLayout {
-                    id: centerContentSlot
+    VerticalSeparator {
+        id: rightSeparator
 
-                    anchors.fill: parent
-                    spacing: 0
-                }
-            }
+        anchors.top: headerSeparator.bottom
+        anchors.bottom: middleSeparator.top
+        anchors.right: rightPane.left
+    }
 
-            VerticalSeparator {
-                Layout.fillHeight: true
-            }
+    PaneSlot {
+        id: rightPane
 
-            PaneSlot {
-                Layout.fillHeight: true
-                Layout.minimumWidth: 220
-                Layout.preferredWidth: 260
-                Layout.maximumWidth: 300
+        anchors.top: headerSeparator.bottom
+        anchors.right: parent.right
+        anchors.bottom: middleSeparator.top
+        width: root.rightPaneWidth
 
-                ColumnLayout {
-                    id: rightSidebarSlot
+        ColumnLayout {
+            id: rightSidebarSlot
 
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 6
-                }
-            }
+            anchors.fill: parent
+            anchors.margins: 8
+            spacing: 6
+        }
+    }
 
-            HorizontalSeparator {
-                Layout.columnSpan: 5
-                Layout.fillWidth: true
-            }
+    SeparatorLine {
+        id: middleSeparator
 
-            PaneSlot {
-                Layout.minimumWidth: 200
-                Layout.preferredWidth: 240
-                Layout.maximumWidth: 280
-                Layout.preferredHeight: 190
-                Layout.minimumHeight: 160
-                Layout.maximumHeight: 210
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: bottomPane.top
+    }
 
-                ColumnLayout {
-                    id: leftBottomSlot
+    PaneSlot {
+        id: leftBottomPane
 
-                    anchors.fill: parent
-                    spacing: 0
-                }
-            }
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        width: root.leftPaneWidth
+        height: root.bottomPaneHeight
 
-            VerticalSeparator {
-                Layout.fillHeight: true
-            }
+        ColumnLayout {
+            id: leftBottomSlot
 
-            PaneSlot {
-                Layout.fillWidth: true
-                Layout.columnSpan: 3
-                Layout.preferredHeight: 190
-                Layout.minimumHeight: 160
-                Layout.maximumHeight: 210
+            anchors.fill: parent
+            anchors.margins: 8
+            spacing: 6
+        }
+    }
 
-                ColumnLayout {
-                    id: bottomContentSlot
+    PaneSlot {
+        id: bottomPane
 
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 6
-                }
-            }
+        anchors.left: leftSeparator.right
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: root.bottomPaneHeight
+
+        ColumnLayout {
+            id: bottomContentSlot
+
+            anchors.fill: parent
+            anchors.margins: 8
+            spacing: 6
         }
     }
 
@@ -196,13 +207,13 @@ Item {
         clip: true
     }
 
-    component VerticalSeparator: Rectangle {
-        Layout.preferredWidth: 1
+    component SeparatorLine: Rectangle {
+        height: root.separatorSize
         color: "#303642"
     }
 
-    component HorizontalSeparator: Rectangle {
-        Layout.preferredHeight: 1
+    component VerticalSeparator: Rectangle {
+        width: root.separatorSize
         color: "#303642"
     }
 }
