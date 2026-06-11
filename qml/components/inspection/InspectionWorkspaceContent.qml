@@ -94,42 +94,10 @@ Item {
         ]
 
         headerStatus: [
-            RowLayout {
+            InspectionHeaderStatus {
                 Layout.fillWidth: true
-                spacing: 8
-
-                Rectangle {
-                    Layout.preferredWidth: 8
-                    Layout.preferredHeight: 8
-                    radius: 4
-                    color: recordingViewModel.recordingActive
-                        ? (recordingViewModel.paused ? "#d8a536" : "#c1272d")
-                        : "#78818f"
-                }
-
-                Label {
-                    color: "#a8b0bd"
-                    font.pixelSize: 11
-                    text: recordingViewModel.recordingActive
-                        ? (recordingViewModel.paused ? "Paused" : "Recording")
-                        : "Idle"
-                }
-
-                Label {
-                    color: "#78818f"
-                    font.pixelSize: 11
-                    text: inspectionContextViewModel.sessionId > 0
-                        ? `Session ${inspectionContextViewModel.sessionId}`
-                        : "No session"
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                RecordingControl {
-                    recordingViewModel: root.recordingVm
-                }
+                recordingViewModel: root.recordingVm
+                inspectionContextViewModel: inspectionContextViewModel
             }
         ]
 
